@@ -1,0 +1,35 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: bookshare
+  datasource:
+    url: jdbc:postgresql://localhost:5432/your_database_name
+    username: your_username
+    password: your_password
+    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  jpa:
+    database: postgresql
+    database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        "[format_sql]": true
+    show-sql: true
+
+jwt:
+  secret: YourSuperSecretKeyForJWTsWhichIsLongAndSecure
+  accessTokenValidTime: 3600000  # 1 hour (ms)
+  refreshTokenValidTime: 604800000 # 7 days
+
+data4library:
+  api:
+    url: http://data4library.kr/api
+    key: YOUR_DATA4LIBRARY_API_KEY
