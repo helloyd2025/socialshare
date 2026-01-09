@@ -161,7 +161,7 @@ public class BookServiceImpl implements BookService {
     
     @Override
     @Transactional
-    public Long registerBook(Long userId, BookRegisterRequest request) {
+    public Book registerBook(Long userId, BookRegisterRequest request) {
     	if (request.getIsbn13() == null) {
 			String fakeIsbn13 = BookUtils.generateBookHash(request.getTitle(), request.getVolume(), request.getAuthor(), request.getPublisher());
 			request.setIsbn13(fakeIsbn13);
@@ -177,7 +177,7 @@ public class BookServiceImpl implements BookService {
 				.imageURL(request.getImageUrl())
 				.build();
 		
-		return bookRepository.save(book).getId();
+		return bookRepository.save(book);
     }
     
     private List<LibraryByBookResponse.LibInfo> findLibrariesByIsbn(String isbn13, int pageSize) {

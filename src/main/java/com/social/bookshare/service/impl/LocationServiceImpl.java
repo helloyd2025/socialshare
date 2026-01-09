@@ -1,6 +1,7 @@
 package com.social.bookshare.service.impl;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.locationtech.jts.geom.Point;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -11,6 +12,7 @@ import com.social.bookshare.domain.Location;
 import com.social.bookshare.domain.User;
 import com.social.bookshare.dto.request.LocationRegisterRequest;
 import com.social.bookshare.dto.request.LocationUpdateRequest;
+import com.social.bookshare.dto.response.UserLocationReponse; // Added import
 import com.social.bookshare.repository.LocationRepository;
 import com.social.bookshare.service.LocationService;
 import com.social.bookshare.utils.EntityMapper;
@@ -28,8 +30,17 @@ public class LocationServiceImpl implements LocationService {
     
     @Override
     @Transactional(readOnly = true)
-	public List<Location> getUserLocations(Long userId) {
-		return locationRepository.findByUser(EntityMapper.getReference(User.class, userId));
+	public List<UserLocationReponse> getUserLocations(Long userId) {
+		return locationRepository.findByUser(EntityMapper.getReference(User.class, userId)).stream()
+				.<UserLocationReponse>map(l -> UserLocationReponse.builder()
+						.id(l.getId())
+						.label(l.getLabel())
+						.address(l.getAddress())
+						.location(l.getLocation())
+						.isActive(l.isActive())
+						.createdAt(l.getCreatedAt())
+						.build())
+				.collect(Collectors.toList());
 	}
     
     @Override
@@ -50,7 +61,7 @@ public class LocationServiceImpl implements LocationService {
     
     @Override
     @Transactional
-    public Long registerUserLocation(Long userId, LocationRegisterRequest request) {
+    public Location registerUserLocation(Long userId, LocationRegisterRequest request) {
     	Location userLocation = Location.builder()
     			.user(EntityMapper.getReference(User.class, userId))
     			.label(request.getLabel())
@@ -59,12 +70,12 @@ public class LocationServiceImpl implements LocationService {
     			.isActive(request.getIsActive())
     			.build();
     	
-    	return locationRepository.save(userLocation).getId();
+    	return locationRepository.save(userLocation);
     }
     
     @Override
     @Transactional
-    public Long registerUserLocation(Long userId, String label, String address, double userLat, double userLon, boolean isActive) {
+    public Location registerUserLocation(Long userId, String label, String address, double userLat, double userLon, boolean isActive) {
     	Location userLocation = Location.builder()
     			.user(EntityMapper.getReference(User.class, userId))
     			.label(label)
@@ -73,7 +84,7 @@ public class LocationServiceImpl implements LocationService {
     			.isActive(isActive)
     			.build();
     	
-    	return locationRepository.save(userLocation).getId();
+    	return locationRepository.save(userLocation);
     }
     
     @Override

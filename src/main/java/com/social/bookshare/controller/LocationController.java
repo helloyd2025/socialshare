@@ -1,7 +1,7 @@
 package com.social.bookshare.controller;
 
+import java.net.URI;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.social.bookshare.config.security.PrincipalDetails;
+import com.social.bookshare.domain.Location;
 import com.social.bookshare.dto.request.LocationRegisterRequest;
 import com.social.bookshare.dto.request.LocationUpdateRequest;
 import com.social.bookshare.dto.response.UserLocationReponse;
@@ -36,20 +38,28 @@ public class LocationController {
 	}
 	
 	@PostMapping("/register")
-	public ResponseEntity<String> registerLocation(
+	public ResponseEntity<UserLocationReponse> registerLocation(
 			@AuthenticationPrincipal PrincipalDetails principalDetails,
 			@RequestBody LocationRegisterRequest request) {
 		
 		try {
-			locationService.registerUserLocation(principalDetails.getId(), request);
+			Location registeredLocation = locationService.registerUserLocation(principalDetails.getId(), request);
+            
+            UserLocationReponse responseDto = UserLocationReponse.builder()
+                    .id(registeredLocation.getId())
+                    .label(registeredLocation.getLabel())
+                    .address(registeredLocation.getAddress())
+                    .location(registeredLocation.getLocation())
+                    .isActive(registeredLocation.isActive())
+                    .createdAt(registeredLocation.getCreatedAt())
+                    .build();
+            
+            URI locationUri = ServletUriComponentsBuilder.fromCurrentRequest()
+                    .path("/{id}")
+                    .buildAndExpand(registeredLocation.getId())
+                    .toUri();
 			
-			return ResponseEntity.status(HttpStatus.CREATED)
-					.body(String.format(
-							"Registered: %s (%d, %d)", // address (latitude, longitude)
-							request.getAddress(), 
-							request.getUserLat(), 
-							request.getUserLon()
-						));
+			return ResponseEntity.created(locationUri).body(responseDto);
 			
 		} catch (DataIntegrityViolationException e) {
 			return ResponseEntity.badRequest().build();
@@ -60,16 +70,7 @@ public class LocationController {
 	
 	@GetMapping("/user/inventory")
 	public ResponseEntity<List<UserLocationReponse>> getUserLocations(@AuthenticationPrincipal PrincipalDetails principalDetails) {
-		List<UserLocationReponse> locations = locationService.getUserLocations(principalDetails.getId()).stream()
-				.<UserLocationReponse>map(l -> UserLocationReponse.builder()
-						.id(l.getId())
-						.label(l.getLabel())
-						.address(l.getAddress())
-						.location(l.getLocation())
-						.isActive(l.isActive())
-						.createdAt(l.getCreatedAt())
-						.build())
-				.collect(Collectors.toList());
+		List<UserLocationReponse> locations = locationService.getUserLocations(principalDetails.getId());
 		
 		return ResponseEntity.ok(locations);
 	}
