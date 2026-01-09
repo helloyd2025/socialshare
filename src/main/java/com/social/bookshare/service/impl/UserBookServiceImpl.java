@@ -113,9 +113,10 @@ public class UserBookServiceImpl implements UserBookService {
 	    RBucket<BookRegisterRequest> pendingBucket = redissonClient.getBucket("PENDING_REG:" + userId);
 	    BookRegisterRequest originalRequest = pendingBucket.get();
 	    
-	    if (originalRequest == null) 
+	    if (originalRequest == null) {
 	    	// To-do : throw new TimeoutException()
 	        throw new IllegalArgumentException("Time-out");
+	    }
 	    
 	    try {
 	    	Map<String, String> response = new HashMap<>();

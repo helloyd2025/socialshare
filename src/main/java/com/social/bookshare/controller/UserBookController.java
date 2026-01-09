@@ -41,16 +41,15 @@ public class UserBookController {
 			@AuthenticationPrincipal PrincipalDetails principalDetails, 
 			@RequestBody BookRegisterRequest request) {
 		try {
-			BookSearchResult suggestedBook = userBookService.requestBookRegistration(principalDetails.getId(), request);
-            return ResponseEntity.ok(suggestedBook);
+            return ResponseEntity.ok(userBookService.requestBookRegistration(principalDetails.getId(), request));
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.badRequest().body(null);
 		} catch (Exception e) {
 			// In service layer, "Book Not Found" error will be thrown.
 			if(e.getMessage().contains("Not Found")) {
 				return ResponseEntity.notFound().build();
-			}
-			return ResponseEntity.internalServerError().build();
+			} else 
+				return ResponseEntity.internalServerError().build();
 		}
 	}
 	
@@ -59,8 +58,7 @@ public class UserBookController {
 	        @AuthenticationPrincipal PrincipalDetails principalDetails,
 	        @RequestParam boolean confirm) {
 	    try {
-	    	Map<String, String> response = userBookService.confirmBookRegistration(principalDetails.getId(), confirm);
-	        return ResponseEntity.ok(response);
+	        return ResponseEntity.ok(userBookService.confirmBookRegistration(principalDetails.getId(), confirm));
 		} catch (IllegalArgumentException e) {
 			// In service layer, "Time-out" error will be thrown.
 			if(e.getMessage().contains("Time-out")) {
@@ -74,9 +72,7 @@ public class UserBookController {
 	
 	@GetMapping("/inventory")
 	public ResponseEntity<List<UserBookResponse>> getUserBooks(@AuthenticationPrincipal PrincipalDetails principalDetails) {
-		List<UserBookResponse> userBooks = userBookService.getUserBooks(principalDetails.getId());
-		
-		return ResponseEntity.ok(userBooks);
+		return ResponseEntity.ok(userBookService.getUserBooks(principalDetails.getId()));
 	}
 	
 	@PatchMapping("/inventory/update")
@@ -86,7 +82,6 @@ public class UserBookController {
 		try {
 			userBookService.updateUserBook(principalDetails.getId(), request);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-			
 		} catch (BadCredentialsException | IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {

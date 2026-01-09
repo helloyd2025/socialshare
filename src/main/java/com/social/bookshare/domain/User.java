@@ -36,6 +36,12 @@ public class User {
     @Column(nullable = false, length = 10)
     private Role role;
     
+    @Column(name = "tfa_secret")
+    private String tfaSecret;
+    
+    @Column(name = "is_tfa_enabled", nullable = false)
+    private boolean isTfaEnabled = false;
+    
     public enum Role {
     	ADMIN, USER, GUEST
     }
@@ -46,12 +52,23 @@ public class User {
 
         this.password = password.strip();
     }
+    
+    // 2FA
+    public void updateUserTfaSecret(String tfaSecret) {
+    	this.tfaSecret = tfaSecret.strip();
+    }
+    
+    public void updateUserIsTfaEnabled(boolean isTfaEnabled) {
+    	this.isTfaEnabled = isTfaEnabled;
+    }
 
     // Getters
     public Long getId() { return id; }
 	public String getEmail() { return email; }
 	public String getPassword() { return password; }
 	public Role getRole() { return role; }
+	public String getTfaSecret() { return tfaSecret; }
+	public boolean getTfaEnabled() { return isTfaEnabled; }
 	
 	// Builder
     public static Builder builder() {

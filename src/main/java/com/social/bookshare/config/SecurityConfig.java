@@ -28,8 +28,9 @@ public class SecurityConfig {
 			.csrf(csrf -> csrf.disable())
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
-					.requestMatchers("/api/user/signup", "/api/user/login", "/api/user/reissue").permitAll()
-					.requestMatchers("/ws/**", "/chat.html").permitAll()
+					.requestMatchers("/api/v1/user/signup", "/api/v1/user/login", 
+							"/api/v1/user/reissue", "/api/v1/user/2fa/authenticate").permitAll()
+//					.requestMatchers("/ws/**", "/chat.html").hasRole("USER")
 					.anyRequest().authenticated())
 			.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 		

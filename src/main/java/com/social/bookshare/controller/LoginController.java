@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.social.bookshare.domain.User;
 import com.social.bookshare.domain.User.Role;
 import com.social.bookshare.dto.request.AuthenticateRequest;
+import com.social.bookshare.dto.request.TwoFactorAuthRequest;
+import com.social.bookshare.dto.response.LoginResponse;
 import com.social.bookshare.dto.response.TokenResponse;
 import com.social.bookshare.service.AuthService;
 import com.social.bookshare.service.UserService;
@@ -38,13 +40,16 @@ public class LoginController {
 	private long refreshTokenValidTime;
     
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(HttpServletResponse response, @RequestBody AuthenticateRequest request) {
+    public ResponseEntity<Object> login(HttpServletResponse response, @RequestBody AuthenticateRequest request) {
     	try {
     		User user = userService.authenticate(request, Role.USER);
-    		TokenResponse tokenResponse = authService.issueTokens(user);
+    		LoginResponse loginResponse = authService.issueTokensAndCheck2FA(user);
     		
-    		this.setSecureCookie(tokenResponse.getRefreshToken(), response);
-            return ResponseEntity.ok(new TokenResponse(tokenResponse.getAccessToken()));
+    		if (loginResponse.isTwoFactorRequired()) // If 2FA required
+    			return ResponseEntity.ok(loginResponse); // Response without tokens
+
+    		this.setSecureCookie(loginResponse.getRefreshToken(), response);
+            return ResponseEntity.ok(new TokenResponse(loginResponse.getAccessToken()));
             
     	} catch (BadCredentialsException | UsernameNotFoundException e) {
     		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -53,16 +58,32 @@ public class LoginController {
         }
     }
     
+    @PostMapping("/2fa/authenticate")
+    public ResponseEntity<TokenResponse> authenticateWith2FA(@RequestBody TwoFactorAuthRequest request, HttpServletResponse response) {
+        try {
+            TokenResponse tokenResponse = authService.authenticateWith2FA(request);
+            
+            this.setSecureCookie(tokenResponse.getRefreshToken(), response);
+            return ResponseEntity.ok(new TokenResponse(tokenResponse.getAccessToken()));
+            
+        } catch (BadCredentialsException | UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
     @PostMapping("/signup")
     public ResponseEntity<TokenResponse> signup(HttpServletResponse response, @RequestBody AuthenticateRequest request) {
     	try {
     		User user = userService.signup(request, Role.USER);
-    		TokenResponse tokenResponse = authService.issueTokens(user);
+    		// As 2FA is disabled immediately after signing up, tokens issued.
+    		LoginResponse loginResponse = authService.issueTokensAndCheck2FA(user);
     		
-    		this.setSecureCookie(tokenResponse.getRefreshToken(), response);
+    		this.setSecureCookie(loginResponse.getRefreshToken(), response);
     		
     		return ResponseEntity.status(HttpStatus.CREATED)
-    				.body(new TokenResponse(tokenResponse.getAccessToken()));
+    				.body(new TokenResponse(loginResponse.getAccessToken()));
     		
     	} catch (IllegalArgumentException e) {
     		return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -85,11 +106,14 @@ public class LoginController {
     }
     
     private void setSecureCookie(String refreshToken, HttpServletResponse response) {
+    	if (refreshToken == null) 
+    		return;
+    	
     	ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
 				.httpOnly(true)
 				.secure(true)
 				.path("/")
-				.maxAge(refreshTokenValidTime * 1000)
+				.maxAge(refreshTokenValidTime / 1000) // maxAge is in seconds
 				.sameSite("Strict")
 				.build();
 		

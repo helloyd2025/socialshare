@@ -70,9 +70,7 @@ public class LocationController {
 	
 	@GetMapping("/user/inventory")
 	public ResponseEntity<List<UserLocationReponse>> getUserLocations(@AuthenticationPrincipal PrincipalDetails principalDetails) {
-		List<UserLocationReponse> locations = locationService.getUserLocations(principalDetails.getId());
-		
-		return ResponseEntity.ok(locations);
+		return ResponseEntity.ok(locationService.getUserLocations(principalDetails.getId()));
 	}
 	
 	@PatchMapping("/user/inventory/update")
