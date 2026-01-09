@@ -1,8 +1,17 @@
 package com.social.bookshare.controller;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,7 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.social.bookshare.config.security.PrincipalDetails;
 import com.social.bookshare.dto.request.LocationRegisterRequest;
+import com.social.bookshare.dto.request.LocationUpdateRequest;
+import com.social.bookshare.dto.response.UserLocationReponse;
 import com.social.bookshare.service.LocationService;
+
+import jakarta.validation.constraints.NotBlank;
 
 @RestController
 @RequestMapping("/api/v1/locations")
@@ -28,16 +41,15 @@ public class LocationController {
 			@RequestBody LocationRegisterRequest request) {
 		
 		try {
-			locationService.registerLocation(principalDetails.getId(), request);
+			locationService.registerUserLocation(principalDetails.getId(), request);
 			
-			return ResponseEntity.ok(
-					String.format(
+			return ResponseEntity.status(HttpStatus.CREATED)
+					.body(String.format(
 							"Registered: %s (%d, %d)", // address (latitude, longitude)
 							request.getAddress(), 
 							request.getUserLat(), 
 							request.getUserLon()
-						)
-					);
+						));
 			
 		} catch (DataIntegrityViolationException e) {
 			return ResponseEntity.badRequest().build();
@@ -46,6 +58,47 @@ public class LocationController {
 		}
 	}
 	
+	@GetMapping("/user/inventory")
+	public ResponseEntity<List<UserLocationReponse>> getUserLocations(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+		List<UserLocationReponse> locations = locationService.getUserLocations(principalDetails.getId()).stream()
+				.<UserLocationReponse>map(l -> UserLocationReponse.builder()
+						.id(l.getId())
+						.label(l.getLabel())
+						.address(l.getAddress())
+						.location(l.getLocation())
+						.isActive(l.isActive())
+						.createdAt(l.getCreatedAt())
+						.build())
+				.collect(Collectors.toList());
+		
+		return ResponseEntity.ok(locations);
+	}
 	
-//	public ResponseEntity() getUserLocations
+	@PatchMapping("/user/inventory/update")
+	public ResponseEntity<String> updateUserLocation(
+			@AuthenticationPrincipal PrincipalDetails principalDetails, 
+			@RequestBody LocationUpdateRequest request) {
+		try {
+			locationService.updateUserLocation(principalDetails.getId(), request);
+			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+		} catch (BadCredentialsException | IllegalArgumentException e) {
+			return ResponseEntity.badRequest().build();
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError().build();
+		}
+	}
+	
+	@DeleteMapping("/user/inventory/{locationId}/delete")
+	public ResponseEntity<String> deleteUserLocation(
+			@AuthenticationPrincipal PrincipalDetails principalDetails,
+			@PathVariable @NotBlank Long locationId) {
+		try {
+			locationService.deleteUserLocation(principalDetails.getId(), locationId);
+			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+		} catch (BadCredentialsException | IllegalArgumentException e) {
+			return ResponseEntity.badRequest().build();
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError().build();
+		}
+	}
 }

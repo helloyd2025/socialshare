@@ -17,6 +17,8 @@ import com.social.bookshare.dto.response.BookLocationResponse;
 import com.social.bookshare.dto.response.BookSearchResult;
 import com.social.bookshare.service.BookService;
 
+import jakarta.validation.constraints.NotBlank;
+
 @RestController
 @RequestMapping("/api/v1/books")
 public class BookController {
@@ -76,7 +78,7 @@ public class BookController {
 	
 	@GetMapping("/{isbn13}/locations")
     public ResponseEntity<List<BookLocationResponse>> getIntegratedBookLocations(
-            @PathVariable String isbn13,
+            @PathVariable @NotBlank String isbn13,
             @RequestParam(value = "user_lat") double userLat,
             @RequestParam(value = "user_lon") double userLon,
             @RequestParam(value = "ref_dist", defaultValue = "1.0") double refDist,

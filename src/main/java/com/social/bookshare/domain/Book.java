@@ -93,12 +93,12 @@ public class Book {
         }
         
         public Builder isbn13(String isbn13) {
-            this.isbn13 = isbn13;
+            this.isbn13 = isbn13.strip();
             return this;
         }
 
         public Builder title(String title) {
-            this.title = title;
+            this.title = title.strip();
             return this;
         }
         
@@ -108,7 +108,7 @@ public class Book {
         }
         
         public Builder className(String className) {
-            this.className = Kdc.valueOf(className.toUpperCase());
+            this.className = Kdc.valueOf(className.strip().toUpperCase());
             return this;
         }
         
@@ -118,17 +118,17 @@ public class Book {
         }
 
         public Builder author(String author) {
-            this.author = author;
+            this.author = author.strip();
             return this;
         }
         
         public Builder publisher(String publisher) {
-            this.publisher = publisher;
+            this.publisher = publisher.strip();
             return this;
         }
         
         public Builder imageURL(String imageURL) {
-            this.imageURL = imageURL;
+            this.imageURL = imageURL.strip();
             return this;
         }
 

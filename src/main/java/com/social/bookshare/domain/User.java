@@ -39,6 +39,13 @@ public class User {
     public enum Role {
     	ADMIN, USER, GUEST
     }
+    
+    public void updateUserPassword(String password) { // Get encoded only
+        if (password == null || password.isBlank()) 
+            throw new IllegalArgumentException("Password cannot be null");
+
+        this.password = password.strip();
+    }
 
     // Getters
     public Long getId() { return id; }
@@ -63,12 +70,12 @@ public class User {
         }
 
         public Builder email(String email) {
-            this.email = email;
+            this.email = email.strip().toLowerCase();
             return this;
         }
 
         public Builder password(String password) {
-            this.password = password;
+            this.password = password.strip();
             return this;
         }
 

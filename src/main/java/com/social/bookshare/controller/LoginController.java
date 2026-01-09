@@ -15,8 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.social.bookshare.domain.User;
 import com.social.bookshare.domain.User.Role;
-import com.social.bookshare.dto.request.LoginRequest;
-import com.social.bookshare.dto.request.SignupRequest;
+import com.social.bookshare.dto.request.AuthenticateRequest;
 import com.social.bookshare.dto.response.TokenResponse;
 import com.social.bookshare.service.AuthService;
 import com.social.bookshare.service.UserService;
@@ -39,9 +38,9 @@ public class LoginController {
 	private long refreshTokenValidTime;
     
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(HttpServletResponse response, @RequestBody LoginRequest request) {
+    public ResponseEntity<TokenResponse> login(HttpServletResponse response, @RequestBody AuthenticateRequest request) {
     	try {
-    		User user = userService.login(request, Role.USER);
+    		User user = userService.authenticate(request, Role.USER);
     		TokenResponse tokenResponse = authService.issueTokens(user);
     		
     		this.setSecureCookie(tokenResponse.getRefreshToken(), response);
@@ -55,7 +54,7 @@ public class LoginController {
     }
     
     @PostMapping("/signup")
-    public ResponseEntity<TokenResponse> signup(HttpServletResponse response, @RequestBody SignupRequest request) {
+    public ResponseEntity<TokenResponse> signup(HttpServletResponse response, @RequestBody AuthenticateRequest request) {
     	try {
     		User user = userService.signup(request, Role.USER);
     		TokenResponse tokenResponse = authService.issueTokens(user);
@@ -77,7 +76,9 @@ public class LoginController {
     	try {    		
     		TokenResponse newTokenResponse = authService.reissueTokens(refreshToken);
     		this.setSecureCookie(newTokenResponse.getRefreshToken(), response);
+    		
     		return ResponseEntity.ok(new TokenResponse(newTokenResponse.getAccessToken()));
+    		
     	} catch (Exception e) {
     		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     	}

@@ -59,6 +59,16 @@ public class Location {
 	@Column(name = "created_at")
 	private Timestamp createdAt;
 	
+//	public void updateLocation(String label, double userLat, double userLon, boolean isActive) {
+//		this.label = label.strip();
+//		this.isActive = isActive;
+//		this.location = GeometryUtils.createPoint(userLon, userLat);
+//	}
+	public void updateLocation(String label, boolean isActive) {
+		this.label = label.strip();
+		this.isActive = isActive;
+	}
+	
 	// Getters
 	public Long getId() { return id; }
 	public User getUser() { return user; }
@@ -94,12 +104,12 @@ public class Location {
         }
     	
     	public Builder label(String label) {
-            this.label = label;
+            this.label = label.strip();
             return this;
         }
     	
     	public Builder address(String address) {
-            this.address = address;
+            this.address = address.strip();
             return this;
         }
     	

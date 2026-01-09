@@ -6,14 +6,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.stream.Stream;
 
-import org.springframework.stereotype.Component;
-
-@Component
 public class BookUtils {
 	
-	public BookUtils() {
-		// If dependencies required, fill here..
-	}
+	private BookUtils() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
 
 	public static String generateBookHash(String title, Short volume, String author, String publisher) {
 		if (Stream.of(title, author, publisher).anyMatch(s -> s == null || s.isBlank()) || volume == null) 

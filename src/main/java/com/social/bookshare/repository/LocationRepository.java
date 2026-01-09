@@ -9,15 +9,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.social.bookshare.domain.Location;
+import com.social.bookshare.domain.User;
 
 public interface LocationRepository extends JpaRepository<Location, Long> {
-
-	public List<Location> findByUserId(Long userId);
 	
-	public Optional<Location> findByUserIdAndLabel(Long userId, String label);
-	public Optional<Location> findByUserIdAndLocation(Long userId, Point location);
+	public List<Location> findByUser(User user);
 	
-	public boolean existsByUserIdAndAddress(Long userId, String address);
+	public Optional<Location> findById(Long locationId);
+	public Optional<Location> findByUserAndLabel(User user, String label);
+	public Optional<Location> findByUserAndLocation(User user, Point location);
+	
+	public boolean existsByUserIdAndAddress(User user, String address);
 	
 	@Query(value = "SELECT * FROM user_locations l " +
             "WHERE ST_DWithin(l.location::geography, :userPoint::geography, :distance) " +

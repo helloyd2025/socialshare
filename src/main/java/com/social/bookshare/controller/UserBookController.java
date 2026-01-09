@@ -4,13 +4,19 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,16 +24,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.social.bookshare.config.security.PrincipalDetails;
-import com.social.bookshare.domain.Book;
-import com.social.bookshare.domain.Location;
 import com.social.bookshare.dto.request.BookRegisterRequest;
+import com.social.bookshare.dto.request.UserBookRegisterRequest;
+import com.social.bookshare.dto.request.UserBookUpdateRequest;
 import com.social.bookshare.dto.response.BookSearchResult;
+import com.social.bookshare.dto.response.UserBookResponse;
 import com.social.bookshare.service.BookService;
 import com.social.bookshare.service.LocationService;
 import com.social.bookshare.service.UserBookService;
 
+import jakarta.validation.constraints.NotBlank;
+
 @RestController
-@RequestMapping("/api/v1/user/books")
+@RequestMapping("/api/v1/user-books")
 public class UserBookController {
 	
 	private final BookService bookService;
@@ -95,7 +104,7 @@ public class UserBookController {
 			if (label != null) { // Register with saved location
 				locationId = locationService.getUserLocation(principalDetails.getId(), label).getId();
 			} else { // Register with current location
-				locationId = locationService.registerLocation(principalDetails.getId(), null, address, userLat, userLon, true);
+				locationId = locationService.registerUserLocation(principalDetails.getId(), null, address, userLat, userLon, true);
 			}
 			request.setLocationId(locationId);
 			
@@ -138,7 +147,7 @@ public class UserBookController {
 				
 				if (originalRequest.getLabel() == null) {
 					// user_locations
-					locationId = locationService.registerLocation(userId, 
+					locationId = locationService.registerUserLocation(userId, 
 							originalRequest.getLabel(), 
 							originalRequest.getAddress(), 
 							originalRequest.getUserLat(), 
@@ -152,7 +161,14 @@ public class UserBookController {
 				}
 				
 				// user_books
-		    	userBookService.registerUserBook(userId, bookId, locationId, originalRequest.getComment(), originalRequest.getStatus());
+				UserBookRegisterRequest ubRequest = UserBookRegisterRequest.builder()
+						.locationId(locationId)
+						.bookId(bookId)
+						.comment(originalRequest.getComment())
+						.status(originalRequest.getStatus())
+						.build();
+				
+		    	userBookService.registerUserBook(userId, ubRequest);
 		    	
 	    		response.put("title", originalRequest.getTitle());
 	    		response.put("firstBook", originalRequest.getIsFirstBook().toString());
@@ -166,5 +182,57 @@ public class UserBookController {
 	    } finally {
 	    	pendingBucket.delete();
 	    }
+	}
+	
+	@GetMapping("/inventory")
+	public ResponseEntity<List<UserBookResponse>> getUserBooks(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+		List<UserBookResponse> userBooks = userBookService.getUserBooks(principalDetails.getId()).stream()
+				.<UserBookResponse>map(ub -> UserBookResponse.builder()
+						.id(ub.getId())
+						.location(ub.getLocation())
+						.book(ub.getBook())
+						.comment(ub.getComment())
+						.status(ub.getStatus())
+						.updatedAt(ub.getUpdatedAt())
+						.build())
+				.collect(Collectors.toList());
+		
+		return ResponseEntity.ok(userBooks);
+	}
+	
+	@PatchMapping("/inventory/update")
+	public ResponseEntity<String> updateUserBook(
+			@AuthenticationPrincipal PrincipalDetails principalDetails,
+			@RequestBody UserBookUpdateRequest request) {
+		try {
+			if (request.getLocationId() == null) {
+				// Register location
+				Long locationId = locationService.registerUserLocation(principalDetails.getId(), 
+						null, request.getAddress(), request.getUserLat(), request.getUserLon(), true);
+				request.setLocationId(locationId);
+			}
+			
+			userBookService.updateUserBook(principalDetails.getId(), request);
+			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+			
+		} catch (BadCredentialsException | IllegalArgumentException e) {
+			return ResponseEntity.badRequest().build();
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError().build();
+		}
+	}
+	
+	@DeleteMapping("/inventory/{userBookId}/delete")
+	public ResponseEntity<String> deleteUserBook(
+			@AuthenticationPrincipal PrincipalDetails principalDetails,
+			@PathVariable @NotBlank Long userBookId) {
+		try {
+			userBookService.deleteUserBook(principalDetails.getId(), userBookId);
+			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+		} catch (BadCredentialsException | IllegalArgumentException e) {
+			return ResponseEntity.badRequest().build();
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError().build();
+		}
 	}
 }

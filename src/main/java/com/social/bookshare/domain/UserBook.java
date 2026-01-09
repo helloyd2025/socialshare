@@ -62,6 +62,12 @@ public class UserBook {
 	public enum Status {
 		AVAILABLE, RENTED, HIDDEN, EXPIRED, BANNED
 	}
+	
+	public void updateUserBook(Location location, String comment, Status status) {
+		this.location = location;
+		this.comment = comment;
+		this.status = status;
+	}
 
 	// Getters
 	public Long getId() { return id; }
@@ -120,7 +126,7 @@ public class UserBook {
         }
     	
     	public Builder status(String status) {
-            this.status = Status.valueOf(status.toUpperCase());
+            this.status = Status.valueOf(status.strip().toUpperCase());
             return this;
         }
     	

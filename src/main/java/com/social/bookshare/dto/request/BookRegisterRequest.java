@@ -1,7 +1,6 @@
 package com.social.bookshare.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.social.bookshare.domain.Location;
 import com.social.bookshare.dto.response.BookSearchResult;
 
 public class BookRegisterRequest {
@@ -69,6 +68,7 @@ public class BookRegisterRequest {
 	}
 	
 	// Getters
+	public Long getBookId() { return bookId; }
 	public String getTitle() { return title; }
 	public Short getVolume() { return volume; }
 	public String getClassName() { return className; }

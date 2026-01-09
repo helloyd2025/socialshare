@@ -1,6 +1,6 @@
 package com.social.bookshare.dto.request;
 
-public class LoginRequest {
+public class AuthenticateRequest {
 
 	private String email;
     private String password;

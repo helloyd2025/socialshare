@@ -32,7 +32,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
-	implementation 'io.github.wimdeblauwe:htmx-spring-boot-thymeleaf:5.0.0'
+	//implementation 'io.github.wimdeblauwe:htmx-spring-boot-thymeleaf:5.0.0'
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 	runtimeOnly 'org.postgresql:postgresql'
 	implementation 'org.hibernate:hibernate-spatial:5.6.11.Final'
@@ -41,6 +41,12 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+	implementation 'com.querydsl:querydsl-jpa:5.0.0'
+	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+	// QueryDSL Spatial
+    //implementation "com.querydsl:querydsl-spatial"
+    // Hibernate Spatial (PostGIS)
+    //implementation "org.hibernate.orm:hibernate-spatial"
 	// test
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
