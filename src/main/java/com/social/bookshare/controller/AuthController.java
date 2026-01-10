@@ -4,7 +4,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +13,8 @@ import com.social.bookshare.config.security.PrincipalDetails;
 import com.social.bookshare.domain.User.Role;
 import com.social.bookshare.dto.request.PassUpdateRequest;
 import com.social.bookshare.service.UserService;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -33,7 +34,7 @@ public class AuthController {
 			userService.updatePassword(principalDetails.getId(), Role.USER, request);
 			return ResponseEntity.status(HttpStatus.ACCEPTED).build();
 			
-		} catch (BadCredentialsException | UsernameNotFoundException e) {
+		} catch (BadCredentialsException | EntityNotFoundException | IllegalArgumentException e) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

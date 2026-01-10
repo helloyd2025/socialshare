@@ -13,6 +13,8 @@ import com.social.bookshare.dto.request.PassUpdateRequest;
 import com.social.bookshare.repository.UserRepository;
 import com.social.bookshare.service.UserService;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class UserServiceImpl implements UserService {
 	
@@ -65,7 +67,7 @@ public class UserServiceImpl implements UserService {
 	@Transactional
 	public void updatePassword(Long userId, Role role, PassUpdateRequest request) {
 		User user = userRepository.findById(userId)
-	            .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+	            .orElseThrow(() -> new EntityNotFoundException("User not found"));
 		
 		if (role != user.getRole()) {
 			throw new BadCredentialsException("Illegal role access");

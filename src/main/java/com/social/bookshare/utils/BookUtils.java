@@ -27,7 +27,7 @@ public class BookUtils {
 	        return "U" + base64Hash.substring(0, 12).toUpperCase();
 	        
 		} catch (NoSuchAlgorithmException e) {
-	        throw new RuntimeException("Hash algorithm not found", e);
+	        throw new IllegalArgumentException("Hash algorithm not found", e);
 	    }
 	}
 }
