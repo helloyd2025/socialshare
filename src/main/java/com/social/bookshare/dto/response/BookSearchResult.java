@@ -49,7 +49,7 @@ public class BookSearchResult {
 	public String getPublisher() { return publisher; }
 	public String getIsbn13() { return isbn13; }
 	public String getImage() { return image; }
-	public boolean getFromLibrary() { return fromLibrary; }
+	public boolean fromLibrary() { return fromLibrary; }
 	
 	//Builder
 	public static Builder builder() {

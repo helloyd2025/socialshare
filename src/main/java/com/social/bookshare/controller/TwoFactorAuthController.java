@@ -25,11 +25,11 @@ public class TwoFactorAuthController {
     }
 
     @PostMapping("/setup")
-    public ResponseEntity<TotpSetupResponse> totpSetup(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+    public ResponseEntity<TotpSetupResponse> tfaSetup(@AuthenticationPrincipal PrincipalDetails principalDetails) {
     	// Start setting up 2FA, generate a QR code.
         User user = EntityMapper.getReference(User.class, principalDetails.getId());
 
-        if (user.getTfaEnabled())  // If 2FA already enabled, further setup blocked... 
+        if (user.isTfaEnabled())  // If 2FA already enabled, further setup blocked... 
              return ResponseEntity.badRequest().build();
 
         // Create secret and QR code
@@ -41,7 +41,7 @@ public class TwoFactorAuthController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<Void> totpVerify(
+    public ResponseEntity<Void> tfaVerify(
             @AuthenticationPrincipal PrincipalDetails principalDetails,
             @RequestBody TotpVerificationRequest verificationRequest) {
     	
@@ -56,7 +56,7 @@ public class TwoFactorAuthController {
     }
 
     @PostMapping("/disable")
-    public ResponseEntity<Void> totpDisable(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+    public ResponseEntity<Void> tfaDisable(@AuthenticationPrincipal PrincipalDetails principalDetails) {
     	User user = EntityMapper.getReference(User.class, principalDetails.getId());
 
     	user.updateUserTfaSecret(null);

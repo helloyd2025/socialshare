@@ -125,7 +125,7 @@ public class UserBookServiceImpl implements UserBookService {
 		    	Long bookId;
 		    	Long locationId;
 		    	
-				if (originalRequest.getIsFirstBook()) {
+				if (originalRequest.isFirstBook()) {
 					// books
 					bookId = bookService.registerBook(userId, originalRequest).getId();
 					originalRequest.setBookId(bookId);
@@ -159,7 +159,7 @@ public class UserBookServiceImpl implements UserBookService {
 		    	this.registerUserBook(userId, ubRequest);
 		    	
 	    		response.put("title", originalRequest.getTitle());
-	    		response.put("firstBook", originalRequest.getIsFirstBook().toString());
+	    		response.put("firstBook", originalRequest.isFirstBook().toString());
 		    	
 		        return response;
 		    } else {

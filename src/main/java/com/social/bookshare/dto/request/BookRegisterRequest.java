@@ -64,7 +64,7 @@ public class BookRegisterRequest {
 		this.author = bookResult.getAuthor();
 		this.publisher = bookResult.getPublisher();
 		this.imageUrl = bookResult.getImage();
-		this.isFirstBook = bookResult.getFromLibrary(); // This is because searching DB before API here
+		this.isFirstBook = bookResult.fromLibrary(); // This is required for searching DB before API here
 	}
 	
 	// Getters
@@ -83,7 +83,7 @@ public class BookRegisterRequest {
 	public String getLabel() { return label; }
 	public String getAddress() { return address; }
 	public String getStatus() { return status; }
-	public Boolean getIsFirstBook() { return isFirstBook; }
+	public Boolean isFirstBook() { return isFirstBook; }
 	
 	// Setters
 	public void setIsbn13(String isbn13) { this.isbn13 = isbn13; } // to set fake ISBN for independent books

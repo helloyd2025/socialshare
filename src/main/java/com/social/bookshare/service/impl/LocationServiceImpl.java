@@ -67,7 +67,7 @@ public class LocationServiceImpl implements LocationService {
     			.label(request.getLabel())
     			.address(request.getAddress())
     			.location(request.getUserLat(), request.getUserLon())
-    			.isActive(request.getIsActive())
+    			.isActive(request.isActive())
     			.build();
     	
     	return locationRepository.save(userLocation);

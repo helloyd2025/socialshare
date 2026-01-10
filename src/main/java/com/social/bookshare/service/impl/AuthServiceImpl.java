@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.social.bookshare.config.security.JwtTokenProvider;
 import com.social.bookshare.domain.User;
 import com.social.bookshare.dto.request.TwoFactorAuthRequest;
-import com.social.bookshare.dto.response.LoginResponse;
 import com.social.bookshare.dto.response.TokenResponse;
 import com.social.bookshare.repository.UserRepository;
 import com.social.bookshare.service.AuthService;
@@ -39,13 +38,11 @@ public class AuthServiceImpl implements AuthService {
     private long refreshTokenValidTime;
 	
 	@Override
-	public LoginResponse issueTokensAndCheck2FA(User user) {
-		if (user.getTfaEnabled()) 
-			return new LoginResponse(true); // Just respond 2FA required without tokens
+	public TokenResponse issueTokensPlainAuth(User user) {
+		if (user.isTfaEnabled())  // 2FA check
+			return TokenResponse.tfaRequired(); // If 2FA is enabled, tokens should never be issued.
 		
-		// If 2FA not required, tokens issued immediately.
-		TokenResponse tokenResponse = createTokens(user);
-		return new LoginResponse(false, tokenResponse.getAccessToken(), tokenResponse.getRefreshToken());
+		return this.createTokens(user);
 	}
 	
 	@Override
@@ -62,25 +59,25 @@ public class AuthServiceImpl implements AuthService {
 	    if (savedToken == null || !savedToken.equals(refreshToken)) 
 	        throw new RuntimeException("Invalid or revoked token");
 
-	    User user = userRepository.findById(userId) // Required immediately
+	    User user = userRepository.findById(userId) // Data required immediately
 	            .orElseThrow(() -> new RuntimeException("User not found"));
         
-		return createTokens(user);
+		return this.createTokens(user);
 	}
 	
 	@Override
 	@Transactional(readOnly = true)
-	public TokenResponse authenticateWith2FA(TwoFactorAuthRequest request) {
+	public TokenResponse issueTokensTfaAuth(TwoFactorAuthRequest request) {
 		User user = userRepository.findByEmail(request.getEmail())
-				.orElseThrow(() -> new UsernameNotFoundException("Invalid credentials."));
+				.orElseThrow(() -> new UsernameNotFoundException("User not fonud"));
 		
-		if (!user.getTfaEnabled()) {
-			throw new BadCredentialsException("Two-factor authentication is not enabled for this user.");
+		if (!user.isTfaEnabled()) {
+			throw new BadCredentialsException("2FA is not enabled for this user.");
 		} else if (!totpService.match(user.getTfaSecret(), request.getCode())) {
-			throw new BadCredentialsException("Invalid 2FA code.");
+			throw new BadCredentialsException("Invalid 2FA code");
 		}
 		
-		return createTokens(user);
+		return this.createTokens(user);
 	}
 	
 	private TokenResponse createTokens(User user) {
@@ -90,6 +87,6 @@ public class AuthServiceImpl implements AuthService {
         RBucket<String> refreshTokenBucket = redissonClient.getBucket("RT:" + user.getId());
         refreshTokenBucket.set(refreshToken, Duration.ofMillis(refreshTokenValidTime));
         
-        return new TokenResponse(accessToken, refreshToken);
+        return TokenResponse.success(accessToken, refreshToken);
 	}
 }

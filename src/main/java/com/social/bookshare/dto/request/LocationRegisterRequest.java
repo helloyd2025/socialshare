@@ -20,5 +20,5 @@ public class LocationRegisterRequest {
 	public double getUserLon() { return userLon; }
 	public String getLabel() { return label; }
 	public String getAddress() { return address; }
-	public boolean getIsActive() { return isActive; }
+	public boolean isActive() { return isActive; }
 }

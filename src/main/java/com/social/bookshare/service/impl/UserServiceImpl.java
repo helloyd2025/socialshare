@@ -6,12 +6,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.social.bookshare.config.security.JwtTokenProvider;
 import com.social.bookshare.domain.User;
 import com.social.bookshare.domain.User.Role;
 import com.social.bookshare.dto.request.AuthenticateRequest;
 import com.social.bookshare.dto.request.PassUpdateRequest;
-import com.social.bookshare.dto.response.TokenResponse;
 import com.social.bookshare.repository.UserRepository;
 import com.social.bookshare.service.UserService;
 
@@ -19,12 +17,10 @@ import com.social.bookshare.service.UserService;
 public class UserServiceImpl implements UserService {
 	
 	private final UserRepository userRepository;
-	private final JwtTokenProvider jwtTokenProvider;
 	private final PasswordEncoder passwordEncoder;
 	
-	public UserServiceImpl(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder) {
+	public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
 		this.userRepository = userRepository;
-		this.jwtTokenProvider = jwtTokenProvider;
 		this.passwordEncoder = passwordEncoder;
 	}
 
@@ -57,13 +53,13 @@ public class UserServiceImpl implements UserService {
 		return userRepository.save(user);
 	}
 
-	@Override
-	public TokenResponse issueTokens(User user) {
-		String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole().name());
-		String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
-		
-		return new TokenResponse(accessToken, refreshToken);
-	}
+//	@Override
+//	public TokenResponse issueTokens(User user) {
+//		String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole().name());
+//		String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
+//		
+//		return TokenResponse.success(accessToken, refreshToken);
+//	}
 
 	@Override
 	@Transactional

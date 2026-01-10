@@ -68,7 +68,7 @@ public class User {
 	public String getPassword() { return password; }
 	public Role getRole() { return role; }
 	public String getTfaSecret() { return tfaSecret; }
-	public boolean getTfaEnabled() { return isTfaEnabled; }
+	public boolean isTfaEnabled() { return isTfaEnabled; }
 	
 	// Builder
     public static Builder builder() {

@@ -17,7 +17,6 @@ import com.social.bookshare.domain.User;
 import com.social.bookshare.domain.User.Role;
 import com.social.bookshare.dto.request.AuthenticateRequest;
 import com.social.bookshare.dto.request.TwoFactorAuthRequest;
-import com.social.bookshare.dto.response.LoginResponse;
 import com.social.bookshare.dto.response.TokenResponse;
 import com.social.bookshare.service.AuthService;
 import com.social.bookshare.service.UserService;
@@ -43,14 +42,14 @@ public class LoginController {
     public ResponseEntity<Object> login(HttpServletResponse response, @RequestBody AuthenticateRequest request) {
     	try {
     		User user = userService.authenticate(request, Role.USER);
-    		LoginResponse loginResponse = authService.issueTokensAndCheck2FA(user);
+    		TokenResponse tokenResponse = authService.issueTokensPlainAuth(user);
     		
-    		if (loginResponse.isTwoFactorRequired()) // If 2FA required
-    			return ResponseEntity.ok(loginResponse); // Response without tokens
-
-    		this.setSecureCookie(loginResponse.getRefreshToken(), response);
-            return ResponseEntity.ok(new TokenResponse(loginResponse.getAccessToken()));
-            
+    		if (tokenResponse.requiresTwoFactor()) {
+    			return ResponseEntity.ok(tokenResponse);
+    		} else {
+    			this.setSecureCookie(tokenResponse.getRefreshToken(), response);
+                return ResponseEntity.ok(tokenResponse.toPublicResponse());
+    		}
     	} catch (BadCredentialsException | UsernameNotFoundException e) {
     		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     	} catch (Exception e) {
@@ -61,10 +60,10 @@ public class LoginController {
     @PostMapping("/2fa/authenticate")
     public ResponseEntity<TokenResponse> authenticateWith2FA(@RequestBody TwoFactorAuthRequest request, HttpServletResponse response) {
         try {
-            TokenResponse tokenResponse = authService.authenticateWith2FA(request);
+            TokenResponse tokenResponse = authService.issueTokensTfaAuth(request);
             
             this.setSecureCookie(tokenResponse.getRefreshToken(), response);
-            return ResponseEntity.ok(new TokenResponse(tokenResponse.getAccessToken()));
+            return ResponseEntity.ok(tokenResponse.toPublicResponse());
             
         } catch (BadCredentialsException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -77,13 +76,11 @@ public class LoginController {
     public ResponseEntity<TokenResponse> signup(HttpServletResponse response, @RequestBody AuthenticateRequest request) {
     	try {
     		User user = userService.signup(request, Role.USER);
-    		// As 2FA is disabled immediately after signing up, tokens issued.
-    		LoginResponse loginResponse = authService.issueTokensAndCheck2FA(user);
+    		// As 2FA is disabled immediately after signing up, tokens will be issued.
+    		TokenResponse tokenResponse = authService.issueTokensPlainAuth(user);
     		
-    		this.setSecureCookie(loginResponse.getRefreshToken(), response);
-    		
-    		return ResponseEntity.status(HttpStatus.CREATED)
-    				.body(new TokenResponse(loginResponse.getAccessToken()));
+    		this.setSecureCookie(tokenResponse.getRefreshToken(), response);
+    		return ResponseEntity.status(HttpStatus.CREATED).body(tokenResponse.toPublicResponse());
     		
     	} catch (IllegalArgumentException e) {
     		return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -96,9 +93,9 @@ public class LoginController {
     public ResponseEntity<TokenResponse> reissue(@CookieValue String refreshToken, HttpServletResponse response) {
     	try {    		
     		TokenResponse newTokenResponse = authService.reissueTokens(refreshToken);
-    		this.setSecureCookie(newTokenResponse.getRefreshToken(), response);
     		
-    		return ResponseEntity.ok(new TokenResponse(newTokenResponse.getAccessToken()));
+    		this.setSecureCookie(newTokenResponse.getRefreshToken(), response);
+    		return ResponseEntity.ok(newTokenResponse.toPublicResponse());
     		
     	} catch (Exception e) {
     		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
