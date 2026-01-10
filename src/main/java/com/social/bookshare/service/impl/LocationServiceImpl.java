@@ -14,18 +14,23 @@ import com.social.bookshare.dto.request.LocationRegisterRequest;
 import com.social.bookshare.dto.request.LocationUpdateRequest;
 import com.social.bookshare.dto.response.UserLocationReponse; // Added import
 import com.social.bookshare.repository.LocationRepository;
+import com.social.bookshare.repository.UserBookRepository;
 import com.social.bookshare.service.LocationService;
 import com.social.bookshare.utils.EntityMapper;
 import com.social.bookshare.utils.GeometryUtils;
 import com.social.bookshare.utils.UserRoleUtils;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class LocationServiceImpl implements LocationService {
 
 	private final LocationRepository locationRepository;
+	private final UserBookRepository userBookRepository;
     
-    public LocationServiceImpl(LocationRepository locationRepository) {
+    public LocationServiceImpl(LocationRepository locationRepository, UserBookRepository userBookRepository) {
     	this.locationRepository = locationRepository;
+    	this.userBookRepository = userBookRepository;
     }
     
     @Override
@@ -47,7 +52,7 @@ public class LocationServiceImpl implements LocationService {
     @Transactional(readOnly = true)
 	public Location getUserLocation(Long userId, String label) {
 		return locationRepository.findByUserAndLabel(EntityMapper.getReference(User.class, userId), label)
-				.orElseThrow(() -> new IllegalArgumentException("Location not found"));
+				.orElseThrow(() -> new EntityNotFoundException("Location not found"));
 	}
 
 	@Override
@@ -56,7 +61,7 @@ public class LocationServiceImpl implements LocationService {
 		Point location = GeometryUtils.createPoint(lon, lat);
 		
 		return locationRepository.findByUserAndLocation(EntityMapper.getReference(User.class, userId), location)
-				.orElseThrow(() -> new IllegalArgumentException("Location not found"));
+				.orElseThrow(() -> new EntityNotFoundException("Location not found"));
 	}
     
     @Override
@@ -91,24 +96,29 @@ public class LocationServiceImpl implements LocationService {
     @Transactional
     public void updateUserLocation(Long userId, LocationUpdateRequest request) {
     	Location location = locationRepository.findById(request.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Location not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Location not found"));
     	
-    	if (location.getUserId() != userId || !UserRoleUtils.isUser())
+    	if (location.getUserId() != userId || !UserRoleUtils.isUser()) { // Credential check
     		throw new BadCredentialsException("Illegal access: " + userId);
+    	} else if (!userBookRepository.existsByLocationIdAndLoanerIsNull(request.getId())) { // Occupied by loan check
+    		throw new IllegalArgumentException("The location info occupied by a book currently on loan cannot be changed.");
+    	}
     	
 //    	location.updateLocation(request.getLabel(), request.getUserLat(), request.getUserLon(), request.getIsActive());
     	location.updateLocation(request.getLabel(), request.getIsActive());
-    	
     }
 
 	@Override
 	@Transactional
 	public void deleteUserLocation(Long userId, Long locationId) {
 		Location location = locationRepository.findById(locationId)
-                .orElseThrow(() -> new IllegalArgumentException("Location not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Location not found"));
 		
-		if (location.getUserId() != userId || !UserRoleUtils.isUser())
-    		throw new BadCredentialsException("Illegal access: " + userId);
+		if (location.getUserId() != userId || !UserRoleUtils.isUser()) { // Credential check
+			throw new BadCredentialsException("Illegal access: " + userId);
+		} else if (!userBookRepository.existsByLocationIdAndLoanerIsNull(locationId)) { // Occupied by loan check
+    		throw new IllegalArgumentException("The location info occupied by a book currently on loan cannot be changed.");
+    	}
 		
 		locationRepository.delete(location);
 	}

@@ -25,6 +25,7 @@ import com.social.bookshare.dto.request.LocationUpdateRequest;
 import com.social.bookshare.dto.response.UserLocationReponse;
 import com.social.bookshare.service.LocationService;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotBlank;
 
 @RestController
@@ -61,7 +62,7 @@ public class LocationController {
 			
 			return ResponseEntity.created(locationUri).body(responseDto);
 			
-		} catch (DataIntegrityViolationException e) {
+		} catch (DataIntegrityViolationException | EntityNotFoundException | IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();
@@ -80,7 +81,7 @@ public class LocationController {
 		try {
 			locationService.updateUserLocation(principalDetails.getId(), request);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (BadCredentialsException | IllegalArgumentException e) {
+		} catch (BadCredentialsException | EntityNotFoundException | IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();
@@ -94,7 +95,7 @@ public class LocationController {
 		try {
 			locationService.deleteUserLocation(principalDetails.getId(), locationId);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (BadCredentialsException | IllegalArgumentException e) {
+		} catch (BadCredentialsException | EntityNotFoundException | IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();

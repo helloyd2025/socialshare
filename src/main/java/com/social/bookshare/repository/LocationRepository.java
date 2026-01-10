@@ -21,9 +21,9 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
 	
 	public boolean existsByUserIdAndAddress(User user, String address);
 	
-	@Query(value = "SELECT * FROM user_locations l " +
-            "WHERE ST_DWithin(l.location::geography, :userPoint::geography, :distance) " +
-            "AND l.is_active = true", 
+	@Query(value = "SELECT * FROM user_locations l" +
+            " WHERE ST_DWithin(l.location::geography, :userPoint::geography, :distance)" +
+            " AND l.is_active = true", 
             nativeQuery = true)
-	List<Location> findNearbyLocations(@Param("userPoint") Point userPoint, @Param("distance") double distance);
+	public List<Location> findNearbyLocations(@Param("userPoint") Point userPoint, @Param("distance") double distance);
 }
