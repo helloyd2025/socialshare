@@ -83,10 +83,12 @@ public class BookController {
             @RequestParam(value = "user_lon") double userLon,
             @RequestParam(value = "ref_dist", defaultValue = "1.0") double refDist,
             @RequestParam(value = "page_size", defaultValue = "5") int pageSize) {
-
-        List<BookLocationResponse> locations = 
-        		bookService.getIntegratedBookLocations(isbn13, userLat, userLon, refDist, pageSize);
-        
-        return ResponseEntity.ok(locations);
+        try {
+            return ResponseEntity.ok(bookService.getIntegratedBookLocations(isbn13, userLat, userLon, refDist, pageSize));
+        } catch (IllegalArgumentException e) {
+        	return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+        	return ResponseEntity.internalServerError().build();
+        }
     }
 }

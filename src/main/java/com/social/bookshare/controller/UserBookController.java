@@ -24,7 +24,6 @@ import com.social.bookshare.dto.response.BookSearchResult;
 import com.social.bookshare.dto.response.UserBookResponse;
 import com.social.bookshare.service.UserBookService;
 
-import io.netty.handler.timeout.ReadTimeoutException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotBlank;
 
@@ -59,9 +58,7 @@ public class UserBookController {
 	        @RequestParam boolean confirm) {
 	    try {
 	        return ResponseEntity.ok(userBookService.confirmBookRegistration(principalDetails.getId(), confirm));
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.badRequest().build();
-	    } catch (ReadTimeoutException e) {
+		} catch (IllegalStateException e) {
 	    	return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).build();
 	    } catch (Exception e) {
 	    	return ResponseEntity.internalServerError().build();

@@ -30,7 +30,6 @@ import com.social.bookshare.service.UserBookService;
 import com.social.bookshare.utils.EntityMapper;
 import com.social.bookshare.utils.UserRoleUtils;
 
-import io.netty.handler.timeout.ReadTimeoutException;
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
@@ -115,10 +114,8 @@ public class UserBookServiceImpl implements UserBookService {
 	    RBucket<BookRegisterRequest> pendingBucket = redissonClient.getBucket("PENDING_REG:" + userId);
 	    BookRegisterRequest originalRequest = pendingBucket.get();
 	    
-	    if (originalRequest == null) {
-	    	// To-do : throw new TimeoutException()
-	        throw new ReadTimeoutException();
-	    }
+	    if (originalRequest == null) 
+	        throw new IllegalStateException();
 	    
 	    try {
 	    	Map<String, String> response = new HashMap<>();
