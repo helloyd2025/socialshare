@@ -74,7 +74,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 			+ " FROM user_books ub"
 			+ " JOIN user_locations ul ON ub.location_id = ul.id"
 			+ " WHERE ub.isbn13 = :isbn13"
-			+ " AND ub.status = 'AVAILABLE'"
+			+ " AND (ub.status = 'AVAILABLE' OR ub.status = 'PENDING_LOAN')"
 			+ "	AND ub.loaner_id IS NULL"
 			+ " AND ul.is_active IS TRUE"
 			+ " ORDER BY distance ASC"
