@@ -4,8 +4,8 @@ import java.sql.Timestamp;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.social.bookshare.domain.Book;
-import com.social.bookshare.domain.Book.Kdc;
 import com.social.bookshare.domain.Location;
+import com.social.bookshare.domain.User;
 import com.social.bookshare.domain.UserBook.Status;
 
 public class UserBookResponse {
@@ -20,12 +20,13 @@ public class UserBookResponse {
 		this.isbn13 = book.getIsbn13();
 		this.title = book.getTitle();
 		this.volume = book.getVolume();
-		this.className = book.getClassName();
+		this.className = String.valueOf(book.getClassName());
 		this.author = book.getAuthor();
 		this.publisher = book.getPublisher();
 		this.imageURL = book.getImageURL();
 		this.comment = builder.comment;
-		this.status = builder.status;
+		this.loanerEmail = builder.loaner.getEmail();
+		this.status = String.valueOf(builder.status);
 		this.updatedAt = builder.updatedAt;
 	}
 
@@ -35,12 +36,13 @@ public class UserBookResponse {
 	private String isbn13;
 	private String title;
 	private Short volume;
-	private Kdc className;
+	private String className;
 	private String author;
 	private String publisher;
 	private String imageURL;
 	private String comment;
-	private Status status;
+	private String loanerEmail;
+	private String status;
 	
 	@JsonProperty("updated_at")
 	private Timestamp updatedAt;
@@ -52,12 +54,13 @@ public class UserBookResponse {
 	public String getIsbn13() { return isbn13; }
 	public String getTitle() { return title; }
 	public Short getVolume() { return volume; }
-	public Kdc getClassName() { return className; }
+	public String getClassName() { return className; }
 	public String getAuthor() { return author; }
 	public String getPublisher() { return publisher; }
 	public String getImageURL() { return imageURL; }
 	public String getComment() { return comment; }
-	public Status getStatus() { return status; }
+	public String getLoanerEmail() { return loanerEmail; }
+	public String getStatus() { return status; }
 	public Timestamp getUpdatedAt() { return updatedAt; }
 	
 	//Builder
@@ -70,6 +73,7 @@ public class UserBookResponse {
 		private Location location;
 		private Book book;
 		private String comment;
+		private User loaner;
 		private Status status;
 		private Timestamp updatedAt;
 	    
@@ -92,6 +96,11 @@ public class UserBookResponse {
             this.comment = comment;
             return this;
         }
+	    
+	    public Builder loaner(User loaner) {
+	    	this.loaner = loaner;
+	    	return this;
+	    }
 	    
 	    public Builder status(Status status) {
             this.status = status;

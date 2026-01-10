@@ -24,7 +24,7 @@ public class UserBook {
 	
 	public UserBook(Builder builder) {
 		this.id = builder.id;
-		this.user = builder.user;
+		this.owner = builder.owner;
 		this.location = builder.location;
 		this.book = builder.book;
 		this.comment = builder.comment;
@@ -37,8 +37,12 @@ public class UserBook {
     private Long id;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
-	private User user;
+	@JoinColumn(name = "owner_id", referencedColumnName = "id", nullable = false)
+	private User owner;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "loaner_id", referencedColumnName = "id")
+	private User loaner;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "location_id", referencedColumnName = "id", nullable = false)
@@ -60,7 +64,7 @@ public class UserBook {
 	private Timestamp updatedAt;
 	
 	public enum Status {
-		AVAILABLE, RENTED, HIDDEN, EXPIRED, BANNED
+		AVAILABLE, LOANED, HIDDEN, EXPIRED, BANNED
 	}
 	
 	public void updateUserBook(Location location, String comment, Status status) {
@@ -68,11 +72,26 @@ public class UserBook {
 		this.comment = comment;
 		this.status = status;
 	}
+	
+	public void loanUserBook(User loaner) {
+		this.loaner = loaner;
+		this.status = Status.LOANED;
+	}
+	
+	public boolean isNotLoaned() {
+		return loaner == null;
+	}
+	
+	public void returnUserBook() {
+		this.status = Status.AVAILABLE;
+	}
 
 	// Getters
 	public Long getId() { return id; }
-	public User getUser() { return user; }
-	public Long getUserId() { return (user != null) ? user.getId() : null; }
+	public User getOwner() { return owner; }
+	public Long getOwnerId() { return (owner != null) ? owner.getId() : null; }
+	public User getLoaner() { return loaner; }
+	public Long getLoanerId() { return (loaner != null) ? loaner.getId() : null; }
 	public Location getLocation() { return location; }
 	public Long getLocationId() { return (location != null) ? location.getId() : null; }
 	public Book getBook() { return book; }
@@ -88,7 +107,7 @@ public class UserBook {
     
     public static class Builder {
     	private Long id;
-    	private User user;
+    	private User owner;
     	private Location location;
     	private Book book;
     	private String comment;
@@ -100,8 +119,8 @@ public class UserBook {
             return this;
         }
     	
-    	public Builder user(User user) {
-            this.user = user;
+    	public Builder owner(User owner) {
+            this.owner = owner;
             return this;
         }
     	

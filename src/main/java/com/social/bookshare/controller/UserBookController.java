@@ -24,6 +24,7 @@ import com.social.bookshare.dto.response.BookSearchResult;
 import com.social.bookshare.dto.response.UserBookResponse;
 import com.social.bookshare.service.UserBookService;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotBlank;
 
 @RestController
@@ -44,12 +45,10 @@ public class UserBookController {
             return ResponseEntity.ok(userBookService.requestBookRegistration(principalDetails.getId(), request));
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.badRequest().body(null);
+		} catch (EntityNotFoundException e) {
+			return ResponseEntity.notFound().build();
 		} catch (Exception e) {
-			// In service layer, "Book Not Found" error will be thrown.
-			if(e.getMessage().contains("Not Found")) {
-				return ResponseEntity.notFound().build();
-			} else 
-				return ResponseEntity.internalServerError().build();
+			return ResponseEntity.internalServerError().build();
 		}
 	}
 	
@@ -82,7 +81,7 @@ public class UserBookController {
 		try {
 			userBookService.updateUserBook(principalDetails.getId(), request);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (BadCredentialsException | IllegalArgumentException e) {
+		} catch (BadCredentialsException | EntityNotFoundException | IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();
@@ -96,7 +95,7 @@ public class UserBookController {
 		try {
 			userBookService.deleteUserBook(principalDetails.getId(), userBookId);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (BadCredentialsException | IllegalArgumentException e) {
+		} catch (BadCredentialsException | EntityNotFoundException | IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();

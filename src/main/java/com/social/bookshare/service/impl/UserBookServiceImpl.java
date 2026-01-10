@@ -30,6 +30,8 @@ import com.social.bookshare.service.UserBookService;
 import com.social.bookshare.utils.EntityMapper;
 import com.social.bookshare.utils.UserRoleUtils;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class UserBookServiceImpl implements UserBookService {
 
@@ -86,10 +88,9 @@ public class UserBookServiceImpl implements UserBookService {
 			suggestedBook = searchResults.get(0);
 		} else {
 			if (isbn13 != null) {
-				// To-do : throw new NotFoundException()
-				throw new IllegalArgumentException("Book Not Found");
-			}
-			suggestedBook = new BookSearchResult(title, volume, className, author, publisher, isbn13, request.getImageUrl(), true);
+				throw new EntityNotFoundException("Book Not Found");
+			} else 
+				suggestedBook = new BookSearchResult(title, volume, className, author, publisher, isbn13, request.getImageUrl(), true);
 		}
 		request.setBookSearchResult(suggestedBook);
 		
@@ -174,7 +175,7 @@ public class UserBookServiceImpl implements UserBookService {
 	@Transactional
 	public UserBook registerUserBook(Long userId, UserBookRegisterRequest request) {
 		UserBook ub = UserBook.builder()
-				.user(EntityMapper.getReference(User.class, userId))
+				.owner(EntityMapper.getReference(User.class, userId))
 				.location(EntityMapper.getReference(Location.class, request.getLocationId()))
 				.book(EntityMapper.getReference(Book.class, request.getBookId()))
 				.comment(request.getComment())
@@ -193,6 +194,7 @@ public class UserBookServiceImpl implements UserBookService {
 						.location(ub.getLocation())
 						.book(ub.getBook())
 						.comment(ub.getComment())
+						.loaner(ub.getLoaner())
 						.status(ub.getStatus())
 						.updatedAt(ub.getUpdatedAt())
 						.build())
@@ -203,10 +205,13 @@ public class UserBookServiceImpl implements UserBookService {
 	@Transactional
 	public void updateUserBook(Long userId, UserBookUpdateRequest request) {
 		UserBook userBook = userBookRepository.findById(request.getId())
-				.orElseThrow(() -> new IllegalArgumentException("User Book not found"));
+				.orElseThrow(() -> new EntityNotFoundException("User Book not found"));
 		
-		if (userBook.getUserId() != userId || !UserRoleUtils.isUser())
+		if (userBook.getOwnerId() != userId || !UserRoleUtils.isUser()) { // Credential check
 			throw new BadCredentialsException("Illegal access: " + userId);
+		} else if (!userBook.isNotLoaned()) { // Loan status check
+			throw new IllegalArgumentException("A book info on loan cannot be changed.");
+		}
 		
 		if (request.getLocationId() == null) {
 			// Register location
@@ -226,10 +231,13 @@ public class UserBookServiceImpl implements UserBookService {
 	@Transactional
 	public void deleteUserBook(Long userId, Long userBookId) {
 		UserBook userBook = userBookRepository.findById(userBookId)
-				.orElseThrow(() -> new IllegalArgumentException("User Book not found"));
+				.orElseThrow(() -> new EntityNotFoundException("User Book not found"));
 		
-		if (userBook.getUserId() != userId || !UserRoleUtils.isUser())
+		if (userBook.getOwnerId() != userId || !UserRoleUtils.isUser()) { // Credential check
 			throw new BadCredentialsException("Illegal access: " + userId);
+		} else if (!userBook.isNotLoaned()) { // Loan status check
+			throw new IllegalArgumentException("A book info on loan cannot be changed.");
+		}
 		
 		userBookRepository.delete(userBook);
 	}
