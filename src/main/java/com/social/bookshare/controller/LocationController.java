@@ -75,7 +75,7 @@ public class LocationController {
 	}
 	
 	@PatchMapping("/user/inventory/update")
-	public ResponseEntity<String> updateUserLocation(
+	public ResponseEntity<Void> updateUserLocation(
 			@AuthenticationPrincipal PrincipalDetails principalDetails, 
 			@RequestBody LocationUpdateRequest request) {
 		try {
@@ -89,7 +89,7 @@ public class LocationController {
 	}
 	
 	@DeleteMapping("/user/inventory/{locationId}/delete")
-	public ResponseEntity<String> deleteUserLocation(
+	public ResponseEntity<Void> deleteUserLocation(
 			@AuthenticationPrincipal PrincipalDetails principalDetails,
 			@PathVariable @NotBlank Long locationId) {
 		try {

@@ -27,7 +27,7 @@ public class AuthController {
 	}
 	
 	@PatchMapping("/pass/update")
-	public ResponseEntity<String> updateUserPassword(
+	public ResponseEntity<Void> updateUserPassword(
 			@AuthenticationPrincipal PrincipalDetails principalDetails,
 			@RequestBody PassUpdateRequest request) {
 		try {
