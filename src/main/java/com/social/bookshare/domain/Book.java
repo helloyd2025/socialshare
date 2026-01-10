@@ -17,7 +17,7 @@ public class Book {
 	
 	protected Book() {}
 	
-	public Book(Builder builder) {
+	private Book(Builder builder) {
 		this.id = builder.id;
 		this.isbn13 = builder.isbn13;
 		this.title = builder.title;

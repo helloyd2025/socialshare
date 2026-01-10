@@ -1,6 +1,6 @@
 package com.social.bookshare.domain;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -22,9 +22,10 @@ public class UserBook {
 
 	protected UserBook() {}
 	
-	public UserBook(Builder builder) {
+	private UserBook(Builder builder) {
 		this.id = builder.id;
 		this.owner = builder.owner;
+		this.loaner = null;
 		this.location = builder.location;
 		this.book = builder.book;
 		this.comment = builder.comment;
@@ -49,7 +50,7 @@ public class UserBook {
 	private Location location;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "isbn13", referencedColumnName = "id", nullable = false)
+	@JoinColumn(name = "book_id", referencedColumnName = "id", nullable = false)
     private Book book;
 	
 	@Column(columnDefinition = "TEXT")
@@ -61,10 +62,14 @@ public class UserBook {
 	
 	@UpdateTimestamp
 	@Column(name = "updated_at")
-	private Timestamp updatedAt;
+	private LocalDateTime updatedAt;
 	
 	public enum Status {
-		AVAILABLE, LOANED, HIDDEN, EXPIRED, BANNED
+		AVAILABLE, 
+		PENDING_LOAN,   // 대출 신청 후 승낙 대기
+	    LOANED,         // 대출 중
+	    PENDING_RETURN, // 반납 신청 후 승낙 대기, 
+		HIDDEN, EXPIRED, BANNED
 	}
 	
 	public void updateUserBook(Location location, String comment, Status status) {
@@ -73,16 +78,23 @@ public class UserBook {
 		this.status = status;
 	}
 	
-	public void loanUserBook(User loaner) {
-		this.loaner = loaner;
-		this.status = Status.LOANED;
-	}
-	
 	public boolean isNotLoaned() {
 		return loaner == null;
 	}
 	
-	public void returnUserBook() {
+	public void setPendingLoan() {
+		if (this.status != Status.AVAILABLE) throw new IllegalStateException("Unavailable book");
+		this.status = Status.PENDING_LOAN;
+	}
+	public void setLoaned(User loaner) {
+		this.loaner = loaner;
+		this.status = Status.LOANED;
+	}
+	public void setPendingReturn() {
+		this.status = Status.PENDING_RETURN;
+	}
+	public void setAvailable() {
+		this.loaner = null;
 		this.status = Status.AVAILABLE;
 	}
 
@@ -98,7 +110,7 @@ public class UserBook {
 	public String getIsbn13() { return (book != null) ? book.getIsbn13() : null; }
 	public String getComment() { return comment; }
 	public Status getStatus() { return status; }
-	public Timestamp getUpdatedAt() { return updatedAt; }
+	public LocalDateTime getUpdatedAt() { return updatedAt; }
 
 	// Builder
     public static Builder builder() {
@@ -112,7 +124,7 @@ public class UserBook {
     	private Book book;
     	private String comment;
     	private Status status;
-    	private Timestamp updatedAt;
+    	private LocalDateTime updatedAt;
     	
     	public Builder id(Long id) {
             this.id = id;
@@ -149,7 +161,7 @@ public class UserBook {
             return this;
         }
     	
-    	public Builder updatedAt(Timestamp updatedAt) {
+    	public Builder updatedAt(LocalDateTime updatedAt) {
             this.updatedAt = updatedAt;
             return this;
         }

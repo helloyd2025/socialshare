@@ -5,7 +5,8 @@ import com.social.bookshare.domain.Book.Kdc;
 
 public class BookSearchResult {
 
-	public BookSearchResult(String title, short volume, String className, String author, String publisher, String isbn13, String image, boolean fromLibrary) {
+	public BookSearchResult(String title, short volume, String className, String author, 
+			String publisher, String isbn13, String image, boolean fromLibrary) {
 		this.title = title;
 		this.volume = volume;
 		this.className = Kdc.valueOf(className.toUpperCase());
@@ -16,7 +17,7 @@ public class BookSearchResult {
 		this.fromLibrary = fromLibrary;
 	}
 	
-	public BookSearchResult(Builder builder) {
+	private BookSearchResult(Builder builder) {
 		this.title = builder.title;
 		this.volume = builder.volume;
 		this.className = builder.className;

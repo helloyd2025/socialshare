@@ -4,7 +4,7 @@ import com.social.bookshare.domain.UserBook.Status;
 
 public class UserBookRegisterRequest {
 	
-	public UserBookRegisterRequest(Builder builder) {
+	private UserBookRegisterRequest(Builder builder) {
 		this.locationId = builder.locationId;
 		this.bookId = builder.bookId;
 		this.comment = builder.comment;

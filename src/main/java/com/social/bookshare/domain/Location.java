@@ -1,6 +1,6 @@
 package com.social.bookshare.domain;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.locationtech.jts.geom.Point;
@@ -24,7 +24,7 @@ public class Location {
 
 	protected Location() {}
 	
-	public Location(Builder builder) {
+	private Location(Builder builder) {
 		this.id = builder.id;
 		this.user = builder.user;
 		this.label = builder.label;
@@ -57,7 +57,7 @@ public class Location {
 	
 	@CreationTimestamp
 	@Column(name = "created_at")
-	private Timestamp createdAt;
+	private LocalDateTime createdAt;
 	
 //	public void updateLocation(String label, double userLat, double userLon, boolean isActive) {
 //		this.label = label.strip();
@@ -77,7 +77,7 @@ public class Location {
 	public String getAddress() { return address; }
 	public Point getLocation() { return location; }
 	public boolean isActive() { return isActive; }
-	public Timestamp getCreatedAt() { return createdAt; }
+	public LocalDateTime getCreatedAt() { return createdAt; }
 
 	// Builder
     public static Builder builder() {
@@ -91,7 +91,7 @@ public class Location {
     	private String address;
     	private Point location;
     	private boolean isActive;
-    	private Timestamp createdAt;
+    	private LocalDateTime createdAt;
     	
     	public Builder id(Long id) {
             this.id = id;
@@ -128,7 +128,7 @@ public class Location {
             return this;
         }
     	
-    	public Builder createdAt(Timestamp createdAt) {
+    	public Builder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
         }

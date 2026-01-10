@@ -12,7 +12,7 @@ public class BookLocationResponse {
 		this.distance = distance;
 	}
 	
-	public BookLocationResponse(Builder builder) {
+	private BookLocationResponse(Builder builder) {
 		this.type = builder.type;
 		this.label = builder.label;
 		this.address = builder.address;

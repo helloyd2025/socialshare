@@ -1,6 +1,6 @@
 package com.social.bookshare.dto.response;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.social.bookshare.domain.Book;
@@ -10,7 +10,7 @@ import com.social.bookshare.domain.UserBook.Status;
 
 public class UserBookResponse {
 	
-	public UserBookResponse(Builder builder) {
+	private UserBookResponse(Builder builder) {
 		Location location = builder.location;
 		Book book = builder.book;
 		
@@ -45,7 +45,7 @@ public class UserBookResponse {
 	private String status;
 	
 	@JsonProperty("updated_at")
-	private Timestamp updatedAt;
+	private LocalDateTime updatedAt;
 	
 	// Getters
 	public Long getId() { return id; }
@@ -61,7 +61,7 @@ public class UserBookResponse {
 	public String getComment() { return comment; }
 	public String getLoanerEmail() { return loanerEmail; }
 	public String getStatus() { return status; }
-	public Timestamp getUpdatedAt() { return updatedAt; }
+	public LocalDateTime getUpdatedAt() { return updatedAt; }
 	
 	//Builder
 	public static Builder builder() {
@@ -75,7 +75,7 @@ public class UserBookResponse {
 		private String comment;
 		private User loaner;
 		private Status status;
-		private Timestamp updatedAt;
+		private LocalDateTime updatedAt;
 	    
 	    public Builder id(Long id) {
             this.id = id;
@@ -107,7 +107,7 @@ public class UserBookResponse {
             return this;
         }
 	    
-	    public Builder updatedAt(Timestamp updatedAt) {
+	    public Builder updatedAt(LocalDateTime updatedAt) {
             this.updatedAt = updatedAt;
             return this;
         }

@@ -1,6 +1,6 @@
 package com.social.bookshare.dto.response;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import org.locationtech.jts.geom.Point;
 
@@ -10,7 +10,7 @@ public class UserLocationReponse {
 
 	public UserLocationReponse() {}
 	
-	public UserLocationReponse(Builder builder) {
+	private UserLocationReponse(Builder builder) {
 		Point location = builder.location;
 		
 		this.id = builder.id;
@@ -32,7 +32,7 @@ public class UserLocationReponse {
 	private boolean isActive;
 	
 	@JsonProperty("created_at")
-	private Timestamp createdAt;
+	private LocalDateTime createdAt;
 
 	// Getters
 	public Long getId() { return id; }
@@ -41,7 +41,7 @@ public class UserLocationReponse {
 	public double getLon() { return lon; }
 	public double getLat() { return lat; }
 	public boolean isActive() { return isActive; }
-	public Timestamp getCreatedAt() { return createdAt; }
+	public LocalDateTime getCreatedAt() { return createdAt; }
 	
 	//Builder
 	public static Builder builder() {
@@ -54,7 +54,7 @@ public class UserLocationReponse {
 		private String address;
 		private Point location;
 		private boolean isActive;
-		private Timestamp createdAt;
+		private LocalDateTime createdAt;
 		
 		public Builder id(Long id) {
 			this.id = id;
@@ -81,7 +81,7 @@ public class UserLocationReponse {
             return this;
         }
 	    
-	    public Builder createdAt(Timestamp createdAt) {
+	    public Builder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
 	    }
