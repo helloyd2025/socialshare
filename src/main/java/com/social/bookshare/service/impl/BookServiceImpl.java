@@ -29,6 +29,8 @@ import com.social.bookshare.service.BookService;
 import com.social.bookshare.utils.BookUtils;
 import com.social.bookshare.utils.GeometryUtils;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class BookServiceImpl implements BookService {
 
@@ -156,7 +158,7 @@ public class BookServiceImpl implements BookService {
     @Transactional(readOnly = true)
     public Book getBook(String isbn13) {
     	return bookRepository.findByIsbn13(isbn13)
-    			.orElseThrow(() -> new IllegalArgumentException("Book not found"));
+    			.orElseThrow(() -> new EntityNotFoundException("Book not found"));
     }
     
     @Override

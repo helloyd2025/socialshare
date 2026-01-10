@@ -75,6 +75,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 			+ " JOIN user_locations ul ON ub.location_id = ul.id"
 			+ " WHERE ub.isbn13 = :isbn13"
 			+ " AND ub.status = 'AVAILABLE'"
+			+ "	AND ub.loaner_id IS NULL"
 			+ " AND ul.is_active IS TRUE"
 			+ " ORDER BY distance ASC"
 			+ " LIMIT :pageSize", 

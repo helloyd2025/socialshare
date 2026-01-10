@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.social.bookshare.domain.Location;
 import com.social.bookshare.domain.User;
@@ -19,4 +21,9 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
 	
 	public List<UserBook> findByUserAndStatus(User user, Status status);
 	public List<UserBook> findByLocationAndStatus(Location location, Status status);
+	
+	@Query("SELECT COUNT(ub) > 0 FROM UserBook ub"
+			+ " WHERE ub.location.id = :locationId"
+			+ " AND ub.loaner IS NULL")
+	public boolean existsByLocationIdAndLoanerIsNull(@Param("locationId") Long locationId);
 }
