@@ -83,7 +83,7 @@ public class LoginController {
     		this.setSecureCookie(tokenResponse.getRefreshToken(), response);
     		return ResponseEntity.status(HttpStatus.CREATED).body(tokenResponse.toPublicResponse());
     		
-    	} catch (IllegalArgumentException e) {
+    	} catch (IllegalStateException e) {
     		return ResponseEntity.status(HttpStatus.CONFLICT).build();
     	} catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

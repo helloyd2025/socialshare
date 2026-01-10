@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
 	@Transactional
 	public User signup(AuthenticateRequest request, Role role) {
 		if (userRepository.existsByEmail(request.getEmail())) 
-            throw new IllegalArgumentException("Duplicate email");
+            throw new IllegalStateException("Duplicate email");
 		
 		User user = User.builder()
                 .email(request.getEmail())

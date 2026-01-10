@@ -211,7 +211,7 @@ public class UserBookServiceImpl implements UserBookService {
 		if (userBook.getOwnerId() != userId || !UserRoleUtils.isUser()) { // Credential check
 			throw new AccessDeniedException("Illegal access: " + userId);
 		} else if (!userBook.isNotLoaned()) { // Loan status check
-			throw new IllegalArgumentException("A book info on loan cannot be changed.");
+			throw new IllegalStateException("A book info on loan cannot be changed.");
 		}
 		
 		if (request.getLocationId() == null) {
@@ -237,7 +237,7 @@ public class UserBookServiceImpl implements UserBookService {
 		if (userBook.getOwnerId() != userId || !UserRoleUtils.isUser()) { // Credential check
 			throw new AccessDeniedException("Illegal access: " + userId);
 		} else if (!userBook.isNotLoaned()) { // Loan status check
-			throw new IllegalArgumentException("A book info on loan cannot be changed.");
+			throw new IllegalStateException("A book info on loan cannot be changed.");
 		}
 		
 		userBookRepository.delete(userBook);
