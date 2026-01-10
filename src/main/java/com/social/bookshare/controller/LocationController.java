@@ -81,7 +81,7 @@ public class LocationController {
 		try {
 			locationService.updateUserLocation(principalDetails.getId(), request);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (EntityNotFoundException | AccessDeniedException | IllegalArgumentException e) {
+		} catch (EntityNotFoundException | AccessDeniedException | IllegalStateException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();
@@ -95,7 +95,7 @@ public class LocationController {
 		try {
 			locationService.deleteUserLocation(principalDetails.getId(), locationId);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (EntityNotFoundException | AccessDeniedException | IllegalArgumentException e) {
+		} catch (EntityNotFoundException | AccessDeniedException | IllegalStateException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();

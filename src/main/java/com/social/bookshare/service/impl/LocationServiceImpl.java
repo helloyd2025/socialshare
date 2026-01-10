@@ -101,7 +101,7 @@ public class LocationServiceImpl implements LocationService {
     	if (location.getUserId() != userId || !UserRoleUtils.isUser()) { // Credential check
     		throw new AccessDeniedException("Illegal access: " + userId);
     	} else if (!userBookRepository.existsByLocationIdAndLoanerIsNull(request.getId())) { // Occupied by loan check
-    		throw new IllegalArgumentException("The location info occupied by a book currently on loan cannot be changed.");
+    		throw new IllegalStateException("The location info occupied by a book currently on loan cannot be changed.");
     	}
     	
 //    	location.updateLocation(request.getLabel(), request.getUserLat(), request.getUserLon(), request.getIsActive());
@@ -117,7 +117,7 @@ public class LocationServiceImpl implements LocationService {
 		if (location.getUserId() != userId || !UserRoleUtils.isUser()) { // Credential check
 			throw new AccessDeniedException("Illegal access: " + userId);
 		} else if (!userBookRepository.existsByLocationIdAndLoanerIsNull(locationId)) { // Occupied by loan check
-    		throw new IllegalArgumentException("The location info occupied by a book currently on loan cannot be changed.");
+    		throw new IllegalStateException("The location info occupied by a book currently on loan cannot be changed.");
     	}
 		
 		locationRepository.delete(location);
