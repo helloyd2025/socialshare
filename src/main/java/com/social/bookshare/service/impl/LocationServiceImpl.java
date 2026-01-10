@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.locationtech.jts.geom.Point;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -99,7 +99,7 @@ public class LocationServiceImpl implements LocationService {
                 .orElseThrow(() -> new EntityNotFoundException("Location not found"));
     	
     	if (location.getUserId() != userId || !UserRoleUtils.isUser()) { // Credential check
-    		throw new BadCredentialsException("Illegal access: " + userId);
+    		throw new AccessDeniedException("Illegal access: " + userId);
     	} else if (!userBookRepository.existsByLocationIdAndLoanerIsNull(request.getId())) { // Occupied by loan check
     		throw new IllegalArgumentException("The location info occupied by a book currently on loan cannot be changed.");
     	}
@@ -115,7 +115,7 @@ public class LocationServiceImpl implements LocationService {
                 .orElseThrow(() -> new EntityNotFoundException("Location not found"));
 		
 		if (location.getUserId() != userId || !UserRoleUtils.isUser()) { // Credential check
-			throw new BadCredentialsException("Illegal access: " + userId);
+			throw new AccessDeniedException("Illegal access: " + userId);
 		} else if (!userBookRepository.existsByLocationIdAndLoanerIsNull(locationId)) { // Occupied by loan check
     		throw new IllegalArgumentException("The location info occupied by a book currently on loan cannot be changed.");
     	}

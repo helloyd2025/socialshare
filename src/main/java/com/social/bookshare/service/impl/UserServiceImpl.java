@@ -1,5 +1,6 @@
 package com.social.bookshare.service.impl;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,7 +34,7 @@ public class UserServiceImpl implements UserService {
 				.orElseThrow(() -> new UsernameNotFoundException("Email not found"));
 		
 		if (role != user.getRole()) {
-			throw new BadCredentialsException("Illegal role access"); // Role check
+			throw new AccessDeniedException("Illegal role access"); // Role check
 		} else if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
 			throw new BadCredentialsException("Illegal pass access"); // Pass check
 		} else
@@ -70,7 +71,7 @@ public class UserServiceImpl implements UserService {
 	            .orElseThrow(() -> new EntityNotFoundException("User not found"));
 		
 		if (role != user.getRole()) {
-			throw new BadCredentialsException("Illegal role access");
+			throw new AccessDeniedException("Illegal role access");
 		} else if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
 	        throw new BadCredentialsException("Illegal pass access");
 	    }

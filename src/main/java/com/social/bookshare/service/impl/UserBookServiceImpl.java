@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +30,7 @@ import com.social.bookshare.service.UserBookService;
 import com.social.bookshare.utils.EntityMapper;
 import com.social.bookshare.utils.UserRoleUtils;
 
+import io.netty.handler.timeout.ReadTimeoutException;
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
@@ -64,12 +65,12 @@ public class UserBookServiceImpl implements UserBookService {
 
 		// request must have either ISBN only or others all
 		boolean hasIsbn = isbn13 != null && !isbn13.isBlank();
-		boolean hasOtherDetails = Stream.of(title, className, author, publisher).allMatch(s -> s != null && !s.isBlank());
+		boolean hasDetails = Stream.of(title, className, author, publisher).allMatch(s -> s != null && !s.isBlank());
 		// request must have either lon-lat pair or label
 		boolean hasLabel = label != null && !label.isBlank();
 		boolean hasLatLon = Stream.of(userLat, userLon).allMatch(d -> d != null);
 		
-		if (!((hasIsbn && !hasOtherDetails) || (!hasIsbn && hasOtherDetails)) 
+		if (!((hasIsbn && !hasDetails) || (!hasIsbn && hasDetails)) 
 			|| !((hasLabel && !hasLatLon) || (!hasLabel && hasLatLon))) {
 			throw new IllegalArgumentException("Invalid register request");
 		}
@@ -116,7 +117,7 @@ public class UserBookServiceImpl implements UserBookService {
 	    
 	    if (originalRequest == null) {
 	    	// To-do : throw new TimeoutException()
-	        throw new IllegalArgumentException("Time-out");
+	        throw new ReadTimeoutException();
 	    }
 	    
 	    try {
@@ -208,7 +209,7 @@ public class UserBookServiceImpl implements UserBookService {
 				.orElseThrow(() -> new EntityNotFoundException("User Book not found"));
 		
 		if (userBook.getOwnerId() != userId || !UserRoleUtils.isUser()) { // Credential check
-			throw new BadCredentialsException("Illegal access: " + userId);
+			throw new AccessDeniedException("Illegal access: " + userId);
 		} else if (!userBook.isNotLoaned()) { // Loan status check
 			throw new IllegalArgumentException("A book info on loan cannot be changed.");
 		}
@@ -234,7 +235,7 @@ public class UserBookServiceImpl implements UserBookService {
 				.orElseThrow(() -> new EntityNotFoundException("User Book not found"));
 		
 		if (userBook.getOwnerId() != userId || !UserRoleUtils.isUser()) { // Credential check
-			throw new BadCredentialsException("Illegal access: " + userId);
+			throw new AccessDeniedException("Illegal access: " + userId);
 		} else if (!userBook.isNotLoaned()) { // Loan status check
 			throw new IllegalArgumentException("A book info on loan cannot be changed.");
 		}

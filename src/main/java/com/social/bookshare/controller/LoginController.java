@@ -7,6 +7,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,7 +51,7 @@ public class LoginController {
     			this.setSecureCookie(tokenResponse.getRefreshToken(), response);
                 return ResponseEntity.ok(tokenResponse.toPublicResponse());
     		}
-    	} catch (BadCredentialsException | UsernameNotFoundException | IllegalArgumentException e) {
+    	} catch (UsernameNotFoundException | AccessDeniedException | BadCredentialsException e) {
     		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     	} catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -65,7 +66,7 @@ public class LoginController {
             this.setSecureCookie(tokenResponse.getRefreshToken(), response);
             return ResponseEntity.ok(tokenResponse.toPublicResponse());
             
-        } catch (BadCredentialsException | UsernameNotFoundException | IllegalArgumentException e) {
+        } catch (UsernameNotFoundException | AccessDeniedException | BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

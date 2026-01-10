@@ -5,6 +5,7 @@ import java.time.Duration;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -54,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
 				.orElseThrow(() -> new UsernameNotFoundException("User not fonud"));
 		
 		if (!user.isTfaEnabled()) {
-			throw new BadCredentialsException("2FA is not enabled for this user.");
+			throw new AccessDeniedException("2FA is not enabled for this user.");
 		} else if (!totpService.match(user.getTfaSecret(), request.getCode())) {
 			throw new BadCredentialsException("Invalid 2FA code");
 		}
@@ -66,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
 	@Transactional(readOnly = true)
 	public TokenResponse reissueTokens(String refreshToken) {
 		if (!jwtTokenProvider.validateToken(refreshToken)) 
-            throw new RuntimeException("Refresh Token expired. Log in again, please.");
+            throw new AccessDeniedException("Refresh Token expired. Log in again, please.");
 		
 		Long userId = jwtTokenProvider.getUserId(refreshToken);
 		
@@ -74,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
 	    String savedToken = refreshTokenBucket.get();
 		
 	    if (savedToken == null || !savedToken.equals(refreshToken)) 
-	        throw new RuntimeException("Invalid or revoked token");
+	        throw new AccessDeniedException("Invalid or revoked token");
 
 	    User user = userRepository.findById(userId) // Data required immediately
 	            .orElseThrow(() -> new EntityNotFoundException("User not found"));

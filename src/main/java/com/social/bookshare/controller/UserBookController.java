@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +24,7 @@ import com.social.bookshare.dto.response.BookSearchResult;
 import com.social.bookshare.dto.response.UserBookResponse;
 import com.social.bookshare.service.UserBookService;
 
+import io.netty.handler.timeout.ReadTimeoutException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotBlank;
 
@@ -59,11 +60,9 @@ public class UserBookController {
 	    try {
 	        return ResponseEntity.ok(userBookService.confirmBookRegistration(principalDetails.getId(), confirm));
 		} catch (IllegalArgumentException e) {
-			// In service layer, "Time-out" error will be thrown.
-			if(e.getMessage().contains("Time-out")) {
-		        return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).build();
-			} else 
-				return ResponseEntity.badRequest().build();
+			return ResponseEntity.badRequest().build();
+	    } catch (ReadTimeoutException e) {
+	    	return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).build();
 	    } catch (Exception e) {
 	    	return ResponseEntity.internalServerError().build();
 	    }
@@ -75,13 +74,13 @@ public class UserBookController {
 	}
 	
 	@PatchMapping("/inventory/update")
-	public ResponseEntity<String> updateUserBook(
+	public ResponseEntity<Void> updateUserBook(
 			@AuthenticationPrincipal PrincipalDetails principalDetails,
 			@RequestBody UserBookUpdateRequest request) {
 		try {
 			userBookService.updateUserBook(principalDetails.getId(), request);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (BadCredentialsException | EntityNotFoundException | IllegalArgumentException e) {
+		} catch (EntityNotFoundException | AccessDeniedException | IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();
@@ -89,13 +88,13 @@ public class UserBookController {
 	}
 	
 	@DeleteMapping("/inventory/{userBookId}/delete")
-	public ResponseEntity<String> deleteUserBook(
+	public ResponseEntity<Void> deleteUserBook(
 			@AuthenticationPrincipal PrincipalDetails principalDetails,
 			@PathVariable @NotBlank Long userBookId) {
 		try {
 			userBookService.deleteUserBook(principalDetails.getId(), userBookId);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (BadCredentialsException | EntityNotFoundException | IllegalArgumentException e) {
+		} catch (EntityNotFoundException | AccessDeniedException | IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();

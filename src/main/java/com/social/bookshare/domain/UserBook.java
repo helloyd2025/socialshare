@@ -82,18 +82,18 @@ public class UserBook {
 		return loaner == null;
 	}
 	
-	public void setPendingLoan() {
+	public void markAsPendingLoan() {
 		if (this.status != Status.AVAILABLE) throw new IllegalStateException("Unavailable book");
 		this.status = Status.PENDING_LOAN;
 	}
-	public void setLoaned(User loaner) {
+	public void markAsLoaned(User loaner) {
 		this.loaner = loaner;
 		this.status = Status.LOANED;
 	}
-	public void setPendingReturn() {
+	public void markAsPendingReturn() {
 		this.status = Status.PENDING_RETURN;
 	}
-	public void setAvailable() {
+	public void markAsAvailable() {
 		this.loaner = null;
 		this.status = Status.AVAILABLE;
 	}

@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,7 +62,7 @@ public class LocationController {
 			
 			return ResponseEntity.created(locationUri).body(responseDto);
 			
-		} catch (DataIntegrityViolationException | EntityNotFoundException | IllegalArgumentException e) {
+		} catch (DataIntegrityViolationException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();
@@ -81,7 +81,7 @@ public class LocationController {
 		try {
 			locationService.updateUserLocation(principalDetails.getId(), request);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (BadCredentialsException | EntityNotFoundException | IllegalArgumentException e) {
+		} catch (EntityNotFoundException | AccessDeniedException | IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();
@@ -95,7 +95,7 @@ public class LocationController {
 		try {
 			locationService.deleteUserLocation(principalDetails.getId(), locationId);
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (BadCredentialsException | EntityNotFoundException | IllegalArgumentException e) {
+		} catch (EntityNotFoundException | AccessDeniedException | IllegalArgumentException e) {
 			return ResponseEntity.badRequest().build();
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();
