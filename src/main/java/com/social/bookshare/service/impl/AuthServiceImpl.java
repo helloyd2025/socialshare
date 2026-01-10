@@ -18,6 +18,8 @@ import com.social.bookshare.repository.UserRepository;
 import com.social.bookshare.service.AuthService;
 import com.social.bookshare.service.TotpService;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -38,9 +40,24 @@ public class AuthServiceImpl implements AuthService {
     private long refreshTokenValidTime;
 	
 	@Override
-	public TokenResponse issueTokensPlainAuth(User user) {
+	public TokenResponse issueTokensForPlainAuth(User user) {
 		if (user.isTfaEnabled())  // 2FA check
 			return TokenResponse.tfaRequired(); // If 2FA is enabled, tokens should never be issued.
+		
+		return this.createTokens(user);
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public TokenResponse issueTokensForTwoFactorAuth(TwoFactorAuthRequest request) {
+		User user = userRepository.findByEmail(request.getEmail())
+				.orElseThrow(() -> new UsernameNotFoundException("User not fonud"));
+		
+		if (!user.isTfaEnabled()) {
+			throw new BadCredentialsException("2FA is not enabled for this user.");
+		} else if (!totpService.match(user.getTfaSecret(), request.getCode())) {
+			throw new BadCredentialsException("Invalid 2FA code");
+		}
 		
 		return this.createTokens(user);
 	}
@@ -60,23 +77,8 @@ public class AuthServiceImpl implements AuthService {
 	        throw new RuntimeException("Invalid or revoked token");
 
 	    User user = userRepository.findById(userId) // Data required immediately
-	            .orElseThrow(() -> new RuntimeException("User not found"));
+	            .orElseThrow(() -> new EntityNotFoundException("User not found"));
         
-		return this.createTokens(user);
-	}
-	
-	@Override
-	@Transactional(readOnly = true)
-	public TokenResponse issueTokensTfaAuth(TwoFactorAuthRequest request) {
-		User user = userRepository.findByEmail(request.getEmail())
-				.orElseThrow(() -> new UsernameNotFoundException("User not fonud"));
-		
-		if (!user.isTfaEnabled()) {
-			throw new BadCredentialsException("2FA is not enabled for this user.");
-		} else if (!totpService.match(user.getTfaSecret(), request.getCode())) {
-			throw new BadCredentialsException("Invalid 2FA code");
-		}
-		
 		return this.createTokens(user);
 	}
 	

@@ -6,7 +6,7 @@ import com.social.bookshare.dto.response.TokenResponse;
 
 public interface AuthService {
 
-	public TokenResponse issueTokensPlainAuth(User user);
+	public TokenResponse issueTokensForPlainAuth(User user);
+	public TokenResponse issueTokensForTwoFactorAuth(TwoFactorAuthRequest request);
 	public TokenResponse reissueTokens(String refreshToken);
-	public TokenResponse issueTokensTfaAuth(TwoFactorAuthRequest request);
 }

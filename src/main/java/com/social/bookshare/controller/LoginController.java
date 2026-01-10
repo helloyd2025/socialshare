@@ -39,10 +39,10 @@ public class LoginController {
 	private long refreshTokenValidTime;
     
     @PostMapping("/login")
-    public ResponseEntity<Object> login(HttpServletResponse response, @RequestBody AuthenticateRequest request) {
+    public ResponseEntity<TokenResponse> login(HttpServletResponse response, @RequestBody AuthenticateRequest request) {
     	try {
     		User user = userService.authenticate(request, Role.USER);
-    		TokenResponse tokenResponse = authService.issueTokensPlainAuth(user);
+    		TokenResponse tokenResponse = authService.issueTokensForPlainAuth(user);
     		
     		if (tokenResponse.requiresTwoFactor()) {
     			return ResponseEntity.ok(tokenResponse);
@@ -50,7 +50,7 @@ public class LoginController {
     			this.setSecureCookie(tokenResponse.getRefreshToken(), response);
                 return ResponseEntity.ok(tokenResponse.toPublicResponse());
     		}
-    	} catch (BadCredentialsException | UsernameNotFoundException e) {
+    	} catch (BadCredentialsException | UsernameNotFoundException | IllegalArgumentException e) {
     		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     	} catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -58,14 +58,14 @@ public class LoginController {
     }
     
     @PostMapping("/2fa/authenticate")
-    public ResponseEntity<TokenResponse> authenticateWith2FA(@RequestBody TwoFactorAuthRequest request, HttpServletResponse response) {
+    public ResponseEntity<TokenResponse> loginWith2FA(@RequestBody TwoFactorAuthRequest request, HttpServletResponse response) {
         try {
-            TokenResponse tokenResponse = authService.issueTokensTfaAuth(request);
+            TokenResponse tokenResponse = authService.issueTokensForTwoFactorAuth(request);
             
             this.setSecureCookie(tokenResponse.getRefreshToken(), response);
             return ResponseEntity.ok(tokenResponse.toPublicResponse());
             
-        } catch (BadCredentialsException | UsernameNotFoundException e) {
+        } catch (BadCredentialsException | UsernameNotFoundException | IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -77,7 +77,7 @@ public class LoginController {
     	try {
     		User user = userService.signup(request, Role.USER);
     		// As 2FA is disabled immediately after signing up, tokens will be issued.
-    		TokenResponse tokenResponse = authService.issueTokensPlainAuth(user);
+    		TokenResponse tokenResponse = authService.issueTokensForPlainAuth(user);
     		
     		this.setSecureCookie(tokenResponse.getRefreshToken(), response);
     		return ResponseEntity.status(HttpStatus.CREATED).body(tokenResponse.toPublicResponse());
