@@ -13,9 +13,9 @@ public class BookUtils {
     }
 
 	public static String generateBookHash(String title, Short volume, String author, String publisher) {
-		if (Stream.of(title, author, publisher).anyMatch(s -> s == null || s.isBlank()) || volume == null) 
+		if (Stream.of(title, author, publisher).anyMatch(s -> s == null || s.isBlank()) || volume == null) {
 			throw new IllegalArgumentException("Must be filled in: title, author, publisher");
-		
+		}
 		try {
 			String input = (title + volume + author + publisher).replaceAll("\\s+", "").toLowerCase();
 			

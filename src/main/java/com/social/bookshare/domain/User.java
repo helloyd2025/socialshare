@@ -51,9 +51,9 @@ public class User {
     }
     
     public void updateUserPassword(String password) { // Get encoded only
-        if (password == null || password.isBlank()) 
-            throw new IllegalArgumentException("Password cannot be null");
-
+        if (password == null || password.isBlank()) {
+        	throw new IllegalArgumentException("Password cannot be null");
+        }
         this.password = password.strip();
     }
     

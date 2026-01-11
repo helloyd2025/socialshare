@@ -15,9 +15,9 @@ public class GeometryUtils {
     }
 	
 	public static Point createPoint(double lon, double lat) {
-        if (factory == null) 
-            throw new IllegalStateException("GeometryFactory not initialized.");
-        
+        if (factory == null) {
+        	throw new IllegalStateException("GeometryFactory not initialized.");
+        }
         return factory.createPoint(new Coordinate(lon, lat));
     }
 	

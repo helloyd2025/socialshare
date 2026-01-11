@@ -22,7 +22,7 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
 	public List<UserBook> findByUserAndStatus(User user, Status status);
 	public List<UserBook> findByLocationAndStatus(Location location, Status status);
 	
-	@Query("SELECT COUNT(ub) > 0 FROM UserBook ub"
+	@Query(value = "SELECT COUNT(ub) > 0 FROM UserBook ub"
 			+ " WHERE ub.location.id = :locationId"
 			+ " AND ub.status IN (com.social.bookshare.domain.UserBook.Status.LOANED,"
 			+ "                   com.social.bookshare.domain.UserBook.Status.PENDING_RETURN)")

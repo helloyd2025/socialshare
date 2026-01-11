@@ -102,9 +102,9 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
 	public List<BookLocationResponse> getIntegratedBookLocations(String isbn13, double userLat, double userLon, double refDist, int pageSize) {
-    	if (pageSize > 20)
+    	if (pageSize > 20) {
     		throw new IllegalArgumentException("Page size: too many to load");
-    	
+    	}
     	List<BookLocationResponse> privateResponses = new ArrayList<>();
     	List<BookLocationResponse> libraryResponses = new ArrayList<>();
 

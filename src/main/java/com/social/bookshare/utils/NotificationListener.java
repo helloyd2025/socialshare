@@ -26,7 +26,7 @@ public class NotificationListener implements CommandLineRunner {
         
         topic.addListener(NotificationMessage.class, (_, msg) -> { // _ means channel
             // Receiving a message from Redis, forward it to a specific user via SSE.
-            notificationController.sendToUser(msg.receiverId(), msg);
+            notificationController.sendToUser(msg.getReceiverId(), msg);
         });
 	}
 

@@ -116,9 +116,9 @@ public class UserBookServiceImpl implements UserBookService {
 	    RBucket<BookRegisterRequest> pendingBucket = redissonClient.getBucket(PENDING_REGISTRATION_PREFIX + userId);
 	    BookRegisterRequest originalRequest = pendingBucket.get();
 	    
-	    if (originalRequest == null) 
-	        throw new IllegalStateException();
-	    
+	    if (originalRequest == null) {
+	    	throw new IllegalStateException();
+	    }
 	    try {
 	    	Map<String, String> response = new HashMap<>();
 		    

@@ -1,14 +1,93 @@
 package com.social.bookshare.dto;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-public record NotificationMessage(
-		Long receiverId,
-	    String title,
-	    String comment,
-	    Map<String, String> content,
-	    String type, // LOAN_REQUEST, REJECTED, CHAT
-	    LocalDateTime timestamp
-	) implements Serializable {}
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class NotificationMessage {
+	
+	private NotificationMessage(Builder builder) {
+		this.receiverId = builder.receiverId;
+		this.senderId = builder.senderId;
+		this.type = builder.type;
+		this.comment = builder.comment;
+		this.content = builder.content;
+		this.timestamp = builder.timestamp;
+	}
+	
+	@JsonProperty("receiver_id")
+	Long receiverId;
+	
+	@JsonProperty("sender_id")
+	Long senderId;
+	
+	String type; // LOAN_REQUEST, REJECTED, CHAT
+    String title;
+    String comment;
+    Map<String, String> content;
+    LocalDateTime timestamp;
+    
+    // Getters
+	public Long getReceiverId() { return receiverId; }
+	public Long getSenderId() { return senderId; }
+	public String getTitle() { return title; }
+	public String getComment() { return comment; }
+	public Map<String, String> getContent() { return content; }
+	public String getType() { return type; }
+	public LocalDateTime getTimestamp() { return timestamp; }
+	
+	// Builder
+	public static Builder builder() {
+		return new Builder();
+	}
+	
+	public static class Builder {
+		Long receiverId;
+		Long senderId;
+		String type;
+	    String title;
+	    String comment;
+	    Map<String, String> content;
+	    LocalDateTime timestamp;
+	    
+	    public Builder receiverId(Long receiverId) {
+	    	this.receiverId = receiverId;
+	    	return this;
+	    }
+	    
+	    public Builder senderId(Long senderId) {
+	    	this.senderId = senderId;
+	    	return this;
+	    }
+	    
+	    public Builder type(String type) {
+	    	this.type = type;
+	    	return this;
+	    }
+	    
+	    public Builder title(String title) {
+	    	this.title = title;
+	    	return this;
+	    }
+	    
+	    public Builder comment(String comment) {
+	    	this.comment = comment;
+	    	return this;
+	    }
+	    
+	    public Builder content(Map<String, String> content) {
+	    	this.content = content;
+	    	return this;
+	    }
+	    
+	    public Builder timestamp(LocalDateTime timestamp) {
+	    	this.timestamp = timestamp;
+	    	return this;
+	    }
+	    
+	    public NotificationMessage build() {
+	    	return new NotificationMessage(this);
+	    }
+	}
+}

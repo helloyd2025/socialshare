@@ -68,16 +68,18 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	@Transactional(readOnly = true)
 	public TokenResponse reissueTokens(String refreshToken) {
-		if (!jwtTokenProvider.validateToken(refreshToken)) 
-            throw new AccessDeniedException("Refresh Token expired. Log in again, please.");
+		if (!jwtTokenProvider.validateToken(refreshToken)) {
+			throw new AccessDeniedException("Refresh Token expired. Log in again, please.");
+		}
 		
 		Long userId = jwtTokenProvider.getUserId(refreshToken);
 		
 		RBucket<String> refreshTokenBucket = redissonClient.getBucket(REFRESH_TOKEN_PREFIX + userId);
 	    String savedToken = refreshTokenBucket.get();
 		
-	    if (savedToken == null || !savedToken.equals(refreshToken)) 
-	        throw new AccessDeniedException("Invalid or revoked token");
+	    if (savedToken == null || !savedToken.equals(refreshToken)) {
+	    	throw new AccessDeniedException("Invalid or revoked token");
+	    }
 
 	    User user = userRepository.findById(userId) // Data required immediately
 	            .orElseThrow(() -> new EntityNotFoundException("User not found"));
