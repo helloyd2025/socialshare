@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.social.bookshare.domain.Book;
 import com.social.bookshare.domain.Location;
-import com.social.bookshare.domain.User;
 import com.social.bookshare.domain.UserBook.Status;
 
 public class UserBookResponse {
@@ -25,7 +24,6 @@ public class UserBookResponse {
 		this.publisher = book.getPublisher();
 		this.imageURL = book.getImageURL();
 		this.comment = builder.comment;
-		this.loanerEmail = builder.loaner.getEmail();
 		this.status = String.valueOf(builder.status);
 		this.updatedAt = builder.updatedAt;
 	}
@@ -41,7 +39,6 @@ public class UserBookResponse {
 	private String publisher;
 	private String imageURL;
 	private String comment;
-	private String loanerEmail;
 	private String status;
 	
 	@JsonProperty("updated_at")
@@ -59,7 +56,6 @@ public class UserBookResponse {
 	public String getPublisher() { return publisher; }
 	public String getImageURL() { return imageURL; }
 	public String getComment() { return comment; }
-	public String getLoanerEmail() { return loanerEmail; }
 	public String getStatus() { return status; }
 	public LocalDateTime getUpdatedAt() { return updatedAt; }
 	
@@ -73,7 +69,6 @@ public class UserBookResponse {
 		private Location location;
 		private Book book;
 		private String comment;
-		private User loaner;
 		private Status status;
 		private LocalDateTime updatedAt;
 	    
@@ -96,11 +91,6 @@ public class UserBookResponse {
             this.comment = comment;
             return this;
         }
-	    
-	    public Builder loaner(User loaner) {
-	    	this.loaner = loaner;
-	    	return this;
-	    }
 	    
 	    public Builder status(Status status) {
             this.status = status;

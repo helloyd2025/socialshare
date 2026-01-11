@@ -103,7 +103,7 @@ public class User {
         }
 
         public Builder password(String password) {
-            this.password = password.strip();
+            this.password = password.strip(); // Encoder will check
             return this;
         }
 

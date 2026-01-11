@@ -25,7 +25,6 @@ public class UserBook {
 	private UserBook(Builder builder) {
 		this.id = builder.id;
 		this.owner = builder.owner;
-		this.loaner = null;
 		this.location = builder.location;
 		this.book = builder.book;
 		this.comment = builder.comment;
@@ -40,10 +39,6 @@ public class UserBook {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "owner_id", referencedColumnName = "id", nullable = false)
 	private User owner;
-	
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "loaner_id", referencedColumnName = "id")
-	private User loaner;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "location_id", referencedColumnName = "id", nullable = false)
@@ -58,18 +53,15 @@ public class UserBook {
 	
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
-	private Status status;
+	private Status status = Status.AVAILABLE;
 	
 	@UpdateTimestamp
 	@Column(name = "updated_at")
 	private LocalDateTime updatedAt;
 	
 	public enum Status {
-		AVAILABLE, 
-		PENDING_LOAN,   // 대출 신청 후 승낙 대기
-	    LOANED,         // 대출 중
-	    PENDING_RETURN, // 반납 신청 후 승낙 대기, 
-		HIDDEN, EXPIRED, BANNED
+		AVAILABLE, HIDDEN, EXPIRED, BANNED,
+		PENDING_LOAN, LOANED, PENDING_RETURN
 	}
 	
 	public void updateUserBook(Location location, String comment, Status status) {
@@ -78,23 +70,21 @@ public class UserBook {
 		this.status = status;
 	}
 	
-	public boolean isNotLoaned() {
-		return loaner == null;
+	public boolean isLoaned() {
+		return status == Status.LOANED || status == Status.PENDING_RETURN;
 	}
 	
 	public void markAsPendingLoan() {
 		if (this.status != Status.AVAILABLE) throw new IllegalStateException("Unavailable book");
 		this.status = Status.PENDING_LOAN;
 	}
-	public void markAsLoaned(User loaner) {
-		this.loaner = loaner;
+	public void markAsLoaned() {
 		this.status = Status.LOANED;
 	}
 	public void markAsPendingReturn() {
 		this.status = Status.PENDING_RETURN;
 	}
 	public void markAsAvailable() {
-		this.loaner = null;
 		this.status = Status.AVAILABLE;
 	}
 
@@ -102,8 +92,6 @@ public class UserBook {
 	public Long getId() { return id; }
 	public User getOwner() { return owner; }
 	public Long getOwnerId() { return (owner != null) ? owner.getId() : null; }
-	public User getLoaner() { return loaner; }
-	public Long getLoanerId() { return (loaner != null) ? loaner.getId() : null; }
 	public Location getLocation() { return location; }
 	public Long getLocationId() { return (location != null) ? location.getId() : null; }
 	public Book getBook() { return book; }
