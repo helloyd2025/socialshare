@@ -18,6 +18,7 @@ public class User {
 	private User(Builder builder) {
 		this.id = builder.id;
 		this.email = builder.email;
+		this.name = builder.name;
 		this.password = builder.password;
 		this.role = builder.role;
 	}
@@ -28,6 +29,9 @@ public class User {
 
     @Column(unique = true, nullable = false)
     private String email;
+    
+    @Column(unique = true, nullable = false)
+    private String name; // nickname
 
     @Column(nullable = false, length = 150)
     private String password;
@@ -65,6 +69,7 @@ public class User {
     // Getters
     public Long getId() { return id; }
 	public String getEmail() { return email; }
+	public String getName() { return name; }
 	public String getPassword() { return password; }
 	public Role getRole() { return role; }
 	public String getTfaSecret() { return tfaSecret; }
@@ -78,6 +83,7 @@ public class User {
     public static class Builder {
         private Long id;
         private String email;
+        private String name;
         private String password;
         private Role role;
 
@@ -89,6 +95,11 @@ public class User {
         public Builder email(String email) {
             this.email = email.strip().toLowerCase();
             return this;
+        }
+        
+        public Builder name(String name) {
+        	this.name = name.strip(); // No case restrictions
+        	return this;
         }
 
         public Builder password(String password) {

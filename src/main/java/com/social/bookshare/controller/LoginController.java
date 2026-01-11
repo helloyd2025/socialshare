@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.social.bookshare.domain.User;
 import com.social.bookshare.domain.User.Role;
 import com.social.bookshare.dto.request.AuthenticateRequest;
+import com.social.bookshare.dto.request.SignupRequest;
 import com.social.bookshare.dto.request.TwoFactorAuthRequest;
 import com.social.bookshare.dto.response.TokenResponse;
 import com.social.bookshare.service.AuthService;
@@ -74,7 +75,7 @@ public class LoginController {
     }
     
     @PostMapping("/signup")
-    public ResponseEntity<TokenResponse> signup(HttpServletResponse response, @RequestBody AuthenticateRequest request) {
+    public ResponseEntity<TokenResponse> signup(HttpServletResponse response, @RequestBody SignupRequest request) {
     	try {
     		User user = userService.signup(request, Role.USER);
     		// As 2FA is disabled immediately after signing up, tokens will be issued.

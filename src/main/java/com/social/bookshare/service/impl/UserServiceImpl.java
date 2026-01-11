@@ -11,6 +11,7 @@ import com.social.bookshare.domain.User;
 import com.social.bookshare.domain.User.Role;
 import com.social.bookshare.dto.request.AuthenticateRequest;
 import com.social.bookshare.dto.request.PassUpdateRequest;
+import com.social.bookshare.dto.request.SignupRequest;
 import com.social.bookshare.repository.UserRepository;
 import com.social.bookshare.service.UserService;
 
@@ -43,12 +44,16 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	@Transactional
-	public User signup(AuthenticateRequest request, Role role) {
-		if (userRepository.existsByEmail(request.getEmail())) 
-            throw new IllegalStateException("Duplicate email");
+	public User signup(SignupRequest request, Role role) {
+		if (userRepository.existsByEmail(request.getEmail())) {
+			throw new IllegalStateException("Duplicate email");
+		} else if (userRepository.existsByName(request.getName())) {
+			throw new IllegalStateException("Duplicate name");
+		}
 		
 		User user = User.builder()
                 .email(request.getEmail())
+                .name(request.getName())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(role)
                 .build();
