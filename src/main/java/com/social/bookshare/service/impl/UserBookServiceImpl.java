@@ -39,6 +39,8 @@ public class UserBookServiceImpl implements UserBookService {
 	private final BookService bookService;
 	private final LocationService locationService;
 	private final RedissonClient redissonClient;
+	
+	private static final String PENDING_REGISTRATION_PREFIX = "REGISTRATION:REQUEST:";
 
 	public UserBookServiceImpl(UserBookRepository userBookRepository, BookService bookService,
 			LocationService locationService, RedissonClient redissonClient) {
@@ -102,7 +104,7 @@ public class UserBookServiceImpl implements UserBookService {
 		}
 		request.setLocationId(locationId);
 		
-		RBucket<BookRegisterRequest> pendingBucket = redissonClient.getBucket("PENDING_REG:" + userId);
+		RBucket<BookRegisterRequest> pendingBucket = redissonClient.getBucket(PENDING_REGISTRATION_PREFIX + userId);
         pendingBucket.set(request, Duration.ofMinutes(10)); // User must confirm within 10 minutes
         
         return suggestedBook;
@@ -111,7 +113,7 @@ public class UserBookServiceImpl implements UserBookService {
 	@Override
 	@Transactional
 	public Map<String, String> confirmBookRegistration(Long userId, boolean confirm) {
-	    RBucket<BookRegisterRequest> pendingBucket = redissonClient.getBucket("PENDING_REG:" + userId);
+	    RBucket<BookRegisterRequest> pendingBucket = redissonClient.getBucket(PENDING_REGISTRATION_PREFIX + userId);
 	    BookRegisterRequest originalRequest = pendingBucket.get();
 	    
 	    if (originalRequest == null) 
@@ -192,7 +194,7 @@ public class UserBookServiceImpl implements UserBookService {
 						.location(ub.getLocation())
 						.book(ub.getBook())
 						.comment(ub.getComment())
-						.loaner(ub.getLoaner())
+//						.loanerEmail(loanHistoryRepository.findCurrentOccupantEmail(ub.getId()).orElse(null))
 						.status(ub.getStatus())
 						.updatedAt(ub.getUpdatedAt())
 						.build())
@@ -207,7 +209,7 @@ public class UserBookServiceImpl implements UserBookService {
 		
 		if (userBook.getOwnerId() != userId || !UserRoleUtils.isUser()) { // Credential check
 			throw new AccessDeniedException("Illegal access: " + userId);
-		} else if (!userBook.isNotLoaned()) { // Loan status check
+		} else if (userBook.isLoaned()) { // Loan status check
 			throw new IllegalStateException("A book info on loan cannot be changed.");
 		}
 		
@@ -233,7 +235,7 @@ public class UserBookServiceImpl implements UserBookService {
 		
 		if (userBook.getOwnerId() != userId || !UserRoleUtils.isUser()) { // Credential check
 			throw new AccessDeniedException("Illegal access: " + userId);
-		} else if (!userBook.isNotLoaned()) { // Loan status check
+		} else if (userBook.isLoaned()) { // Loan status check
 			throw new IllegalStateException("A book info on loan cannot be changed.");
 		}
 		

@@ -28,6 +28,8 @@ public class AuthServiceImpl implements AuthService {
 	private final TotpService totpService;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedissonClient redissonClient;
+	
+	private static final String REFRESH_TOKEN_PREFIX = "REFRESH_TOKEN:";
 
 	public AuthServiceImpl(UserRepository userRepository, TotpService totpService, 
 			JwtTokenProvider jwtTokenProvider, RedissonClient redissonClient) {
@@ -71,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
 		
 		Long userId = jwtTokenProvider.getUserId(refreshToken);
 		
-		RBucket<String> refreshTokenBucket = redissonClient.getBucket("RT:" + userId);
+		RBucket<String> refreshTokenBucket = redissonClient.getBucket(REFRESH_TOKEN_PREFIX + userId);
 	    String savedToken = refreshTokenBucket.get();
 		
 	    if (savedToken == null || !savedToken.equals(refreshToken)) 
@@ -87,7 +89,7 @@ public class AuthServiceImpl implements AuthService {
 		String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole().name());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
-        RBucket<String> refreshTokenBucket = redissonClient.getBucket("RT:" + user.getId());
+        RBucket<String> refreshTokenBucket = redissonClient.getBucket(REFRESH_TOKEN_PREFIX + user.getId());
         refreshTokenBucket.set(refreshToken, Duration.ofMillis(refreshTokenValidTime));
         
         return TokenResponse.success(accessToken, refreshToken);
