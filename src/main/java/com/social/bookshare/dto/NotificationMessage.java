@@ -9,9 +9,8 @@ public class NotificationMessage {
 	
 	private NotificationMessage(Builder builder) {
 		this.receiverId = builder.receiverId;
-		this.senderId = builder.senderId;
 		this.type = builder.type;
-		this.comment = builder.comment;
+		this.message = builder.message;
 		this.content = builder.content;
 		this.timestamp = builder.timestamp;
 	}
@@ -19,20 +18,16 @@ public class NotificationMessage {
 	@JsonProperty("receiver_id")
 	Long receiverId;
 	
-	@JsonProperty("sender_id")
-	Long senderId;
-	
 	String type; // LOAN_REQUEST, REJECTED, CHAT
     String title;
-    String comment;
+    String message;
     Map<String, String> content;
     LocalDateTime timestamp;
     
     // Getters
 	public Long getReceiverId() { return receiverId; }
-	public Long getSenderId() { return senderId; }
 	public String getTitle() { return title; }
-	public String getComment() { return comment; }
+	public String getMessage() { return message; }
 	public Map<String, String> getContent() { return content; }
 	public String getType() { return type; }
 	public LocalDateTime getTimestamp() { return timestamp; }
@@ -47,7 +42,7 @@ public class NotificationMessage {
 		Long senderId;
 		String type;
 	    String title;
-	    String comment;
+	    String message;
 	    Map<String, String> content;
 	    LocalDateTime timestamp;
 	    
@@ -71,8 +66,8 @@ public class NotificationMessage {
 	    	return this;
 	    }
 	    
-	    public Builder comment(String comment) {
-	    	this.comment = comment;
+	    public Builder message(String message) {
+	    	this.message = message;
 	    	return this;
 	    }
 	    

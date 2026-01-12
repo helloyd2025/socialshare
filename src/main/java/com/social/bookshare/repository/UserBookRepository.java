@@ -24,7 +24,8 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
 	
 	@Query(value = "SELECT COUNT(ub) > 0 FROM UserBook ub"
 			+ " WHERE ub.location.id = :locationId"
-			+ " AND ub.status IN (com.social.bookshare.domain.UserBook.Status.LOANED,"
+			+ " AND ub.status IN (com.social.bookshare.domain.UserBook.Status.PENDING_LOAN, "
+			+ "					  com.social.bookshare.domain.UserBook.Status.LOANED,"
 			+ "                   com.social.bookshare.domain.UserBook.Status.PENDING_RETURN)")
 	public boolean isLocationOccupied(@Param("locationId") Long locationId);
 }

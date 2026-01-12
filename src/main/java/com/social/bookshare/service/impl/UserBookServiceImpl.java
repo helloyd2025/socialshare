@@ -117,7 +117,7 @@ public class UserBookServiceImpl implements UserBookService {
 	    BookRegisterRequest originalRequest = pendingBucket.get();
 	    
 	    if (originalRequest == null) {
-	    	throw new IllegalStateException();
+	    	throw new IllegalStateException("Invalid or revoked request");
 	    }
 	    try {
 	    	Map<String, String> response = new HashMap<>();
@@ -205,11 +205,11 @@ public class UserBookServiceImpl implements UserBookService {
 	@Transactional
 	public void updateUserBook(Long userId, UserBookUpdateRequest request) {
 		UserBook userBook = userBookRepository.findById(request.getId())
-				.orElseThrow(() -> new EntityNotFoundException("User Book not found"));
+				.orElseThrow(() -> new EntityNotFoundException("User book not found"));
 		
 		if (userBook.getOwnerId() != userId || !UserRoleUtils.isUser()) { // Credential check
 			throw new AccessDeniedException("Illegal access: " + userId);
-		} else if (userBook.isLoaned()) { // Loan status check
+		} else if (userBook.isOccupied()) { // Loan status check
 			throw new IllegalStateException("A book info on loan cannot be changed.");
 		}
 		
@@ -231,11 +231,11 @@ public class UserBookServiceImpl implements UserBookService {
 	@Transactional
 	public void deleteUserBook(Long userId, Long userBookId) {
 		UserBook userBook = userBookRepository.findById(userBookId)
-				.orElseThrow(() -> new EntityNotFoundException("User Book not found"));
+				.orElseThrow(() -> new EntityNotFoundException("User book not found"));
 		
 		if (userBook.getOwnerId() != userId || !UserRoleUtils.isUser()) { // Credential check
 			throw new AccessDeniedException("Illegal access: " + userId);
-		} else if (userBook.isLoaned()) { // Loan status check
+		} else if (userBook.isOccupied()) { // Loan status check
 			throw new IllegalStateException("A book info on loan cannot be changed.");
 		}
 		

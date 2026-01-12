@@ -52,7 +52,7 @@ public class UserBook {
 	private String comment;
 	
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, length = 20)
+	@Column(nullable = false, length = 30)
 	private Status status = Status.AVAILABLE;
 	
 	@UpdateTimestamp
@@ -60,8 +60,9 @@ public class UserBook {
 	private LocalDateTime updatedAt;
 	
 	public enum Status {
-		AVAILABLE, HIDDEN, EXPIRED, BANNED,
-		PENDING_LOAN, LOANED, PENDING_RETURN
+		AVAILABLE, 
+		PENDING_LOAN, LOANED, PENDING_RETURN, // Occupied
+		HIDDEN, EXPIRED, BANNED
 	}
 	
 	public void updateUserBook(Location location, String comment, Status status) {
@@ -70,22 +71,34 @@ public class UserBook {
 		this.status = status;
 	}
 	
-	public boolean isLoaned() {
-		return status == Status.LOANED || status == Status.PENDING_RETURN;
+	public boolean isOccupied() {
+		return status == Status.PENDING_LOAN || status == Status.LOANED || status == Status.PENDING_RETURN;
 	}
 	
-	public void markAsPendingLoan() {
+	// Markers
+	public void approveLoan() {
 		if (this.status != Status.AVAILABLE) throw new IllegalStateException("Unavailable book");
 		this.status = Status.PENDING_LOAN;
 	}
-	public void markAsLoaned() {
+	public void confirmLoan() {
+		if (this.status != Status.PENDING_LOAN) throw new IllegalStateException("Unapproved book");
 		this.status = Status.LOANED;
 	}
-	public void markAsPendingReturn() {
+	public void voidLoan() { // Invalidation policy in case the loaner give up pickup
+		if (this.status != Status.PENDING_LOAN) throw new IllegalStateException("You cannot void at this level");
+		this.status = Status.AVAILABLE;
+	}
+	public void requestReturn() {
+		if (this.status != Status.LOANED) throw new IllegalStateException("Book is not loaned");
 		this.status = Status.PENDING_RETURN;
 	}
-	public void markAsAvailable() {
+	public void confirmReturn() {
+		if (this.status != Status.PENDING_RETURN) throw new IllegalStateException("Not ready to return");
 		this.status = Status.AVAILABLE;
+	}
+	public void cancelReturnRequest() {
+		if (this.status != Status.PENDING_RETURN) throw new IllegalStateException("Book is not pending return");
+		this.status = Status.LOANED;
 	}
 
 	// Getters
