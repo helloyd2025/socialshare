@@ -24,7 +24,7 @@ public class NotificationListener implements CommandLineRunner {
 	public void run(String... args) throws Exception {
 		RTopic topic = redissonClient.getTopic("user-notifications");
         
-        topic.addListener(NotificationMessage.class, (_, msg) -> { // _ means channel
+        topic.addListener(NotificationMessage.class, (channel, msg) -> {
             // Receiving a message from Redis, forward it to a specific user via SSE.
             notificationController.sendToUser(msg.getReceiverId(), msg);
         });
