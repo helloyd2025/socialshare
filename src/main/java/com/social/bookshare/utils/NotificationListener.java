@@ -5,7 +5,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import com.social.bookshare.controller.NotificationController;
+import com.social.bookshare.controller.api.NotificationController;
 import com.social.bookshare.dto.NotificationMessage;
 
 @Component

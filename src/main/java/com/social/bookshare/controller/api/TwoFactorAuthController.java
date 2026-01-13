@@ -1,4 +1,4 @@
-package com.social.bookshare.controller;
+package com.social.bookshare.controller.api;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

@@ -1,4 +1,4 @@
-package com.social.bookshare.controller;
+package com.social.bookshare.controller.api;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +33,7 @@ public class LoanHistoryController {
             @RequestParam(required = false) String comment,
             @RequestParam(required = false) Integer loanDays) {
 		
-		LoanAction action = LoanAction.valueOf((actionType + "_loan").toUpperCase());
+		LoanAction action = LoanAction.valueOf((actionType).toUpperCase());
 		try {
 			loanHistoryService.processAction(userBookId, ownerId, loanerId, action, loanDays, comment);
 			return ResponseEntity.ok().build();

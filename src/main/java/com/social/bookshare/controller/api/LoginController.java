@@ -1,4 +1,4 @@
-package com.social.bookshare.controller;
+package com.social.bookshare.controller.api;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;

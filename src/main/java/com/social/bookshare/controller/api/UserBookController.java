@@ -1,4 +1,4 @@
-package com.social.bookshare.controller;
+package com.social.bookshare.controller.api;
 
 import java.util.List;
 import java.util.Map;

@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    # H2 인메모리 DB 설정 (PostgreSQL 모드 활성화)
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop # 테스트마다 테이블을 새로 만들고 삭제함
+    properties:
+      hibernate:
+        # H2용 방언으로 설정 (PostGIS 기능은 테스트 시 제한될 수 있음)
+        dialect: org.hibernate.dialect.H2Dialect
+  data:
+    redis:
+      # 테스트 시 실제 Redis가 없다면 구동에 실패할 수 있으므로 
+      # 테스트 환경용 임베디드 Redis 설정을 하거나 관련 로직을 Mocking해야 합니다.
+      host: localhost
+      port: 6379

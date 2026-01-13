@@ -1,4 +1,4 @@
-package com.social.bookshare.controller;
+package com.social.bookshare.controller.api;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
