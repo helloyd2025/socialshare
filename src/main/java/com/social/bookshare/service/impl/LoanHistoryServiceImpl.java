@@ -39,8 +39,8 @@ public class LoanHistoryServiceImpl implements LoanHistoryService {
     private final NotificationService notificationService;
     private final RedissonClient redissonClient;
     
-    private static final String PENDING_LOAN_PREFIX = "LOAN:REQUEST:";
-    private static final String RLOCK_PREFIX = "LOCK:USERBOOK:";
+    private static final String PENDING_LOAN_PREFIX = "LOAN_HISTORY:LOAN:REQUEST:";
+    private static final String RLOCK_PREFIX = "LOAN_HISTORY:LOCK:USERBOOK:";
 	
 	public LoanHistoryServiceImpl(LoanHistoryRepository loanHistoryRepository, 
 			NotificationService notificatinoService, RedissonClient redissonClient) {

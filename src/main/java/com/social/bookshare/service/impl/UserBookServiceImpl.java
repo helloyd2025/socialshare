@@ -40,7 +40,7 @@ public class UserBookServiceImpl implements UserBookService {
 	private final LocationService locationService;
 	private final RedissonClient redissonClient;
 	
-	private static final String PENDING_REGISTRATION_PREFIX = "REGISTRATION:REQUEST:";
+	private static final String PENDING_REGISTRATION_PREFIX = "USER_BOOK:REGISTRATION:REQUEST:";
 
 	public UserBookServiceImpl(UserBookRepository userBookRepository, BookService bookService,
 			LocationService locationService, RedissonClient redissonClient) {
