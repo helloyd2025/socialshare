@@ -163,7 +163,7 @@ public class BookServiceImpl implements BookService {
     
     @Override
     @Transactional
-    public Book registerBook(Long userId, BookRegisterRequest request) {
+    public Book registerBook(BookRegisterRequest request) {
     	if (request.getIsbn13() == null) {
 			String fakeIsbn13 = BookUtils.generateBookHash(request.getTitle(), request.getVolume(), request.getAuthor(), request.getPublisher());
 			request.setIsbn13(fakeIsbn13);

@@ -16,6 +16,6 @@ public interface BookService {
 	
 	public Book getBook(String isbn13);
 	
-	public Book registerBook(Long userId, BookRegisterRequest request);
+	public Book registerBook(BookRegisterRequest request);
 //	public List<BookSearchResult> fetchFromApi(String title, String author, String isbn13, String keywords, String publisher, int pageSize);
 }

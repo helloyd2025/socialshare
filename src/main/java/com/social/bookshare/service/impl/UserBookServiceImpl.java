@@ -128,7 +128,7 @@ public class UserBookServiceImpl implements UserBookService {
 		    	
 				if (originalRequest.isFirstBook()) {
 					// books
-					bookId = bookService.registerBook(userId, originalRequest).getId();
+					bookId = bookService.registerBook(originalRequest).getId();
 					originalRequest.setBookId(bookId);
 				} else {
 					bookId = bookService.getBook(originalRequest.getIsbn13()).getId();
