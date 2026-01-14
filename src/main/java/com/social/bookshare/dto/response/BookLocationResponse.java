@@ -1,8 +1,13 @@
 package com.social.bookshare.dto.response;
 
+import java.util.Comparator;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BookLocationResponse {
+	
+	public static final Comparator<BookLocationResponse> DISTANCE_COMPARATOR = 
+	        Comparator.comparingDouble(BookLocationResponse::getDistance);
 	
 	public BookLocationResponse(String label, String address, double lon, double lat, double distance) {
 		this.label = label;

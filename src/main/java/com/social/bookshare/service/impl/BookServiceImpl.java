@@ -3,7 +3,6 @@ package com.social.bookshare.service.impl;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -147,8 +146,8 @@ public class BookServiceImpl implements BookService {
             		.build());
         }
         
-        privateResponses.sort(Comparator.comparingDouble(BookLocationResponse::getDistance));
-        libraryResponses.sort(Comparator.comparingDouble(BookLocationResponse::getDistance));
+        privateResponses.sort(BookLocationResponse.DISTANCE_COMPARATOR);
+        libraryResponses.sort(BookLocationResponse.DISTANCE_COMPARATOR);
         
         return Stream.concat(privateResponses.stream(), libraryResponses.stream())
         		.collect(Collectors.toList());
