@@ -116,7 +116,8 @@ public class BookServiceImpl implements BookService {
         	double distance = dbItem.getDistance();
         	
         	privateResponses.add(BookLocationResponse.builder()
-        			.type("PRIVATE")
+//        			.type("PRIVATE")
+        			.owner(dbItem.getOwner())
         			.label(dbItem.getLabel())
         			.address(dbItem.getAddress())
         			.distance(Math.round(distance * 100.0) / 100.0)
@@ -136,7 +137,8 @@ public class BookServiceImpl implements BookService {
             double distance = GeometryUtils.calculateDistance(libLon, libLat, userLon, userLat);
             
             libraryResponses.add(BookLocationResponse.builder()
-            		.type("LIBRARY")
+//            		.type("LIBRARY")
+            		.owner(null)
             		.label(lib.getLibName())
             		.address(lib.getAddress())
             		.distance(Math.round(distance * 100.0) / 100.0)

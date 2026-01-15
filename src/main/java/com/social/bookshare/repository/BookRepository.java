@@ -61,6 +61,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 	        );
 	
 	public interface BookLocationProjection {
+		String getOwner();
 	    String getLabel();
 	    String getAddress();
 	    Double getLon();
@@ -68,10 +69,12 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 	    Double getDistance();
 	}
 
-	@Query(value = "SELECT ul.label as label, ul.address as address,"
+	@Query(value = "SELECT us.name as owner,"
+			+ " ul.label as label, ul.address as address,"
 			+ " ST_X(ul.location) as lon, ST_Y(ul.location) as lat,"
 			+ " ST_DistanceSphere(ul.location, :userPoint) / 1000.0 as distance"
 			+ " FROM user_books ub"
+			+ " JOIN users us ON ub.owner_id = us.id"
 			+ " JOIN user_locations ul ON ub.location_id = ul.id"
 			+ " WHERE ub.isbn13 = :isbn13"
 			+ " AND ub.status = 'AVAILABLE'"

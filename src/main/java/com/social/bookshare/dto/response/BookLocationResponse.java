@@ -9,7 +9,8 @@ public class BookLocationResponse {
 	public static final Comparator<BookLocationResponse> DISTANCE_COMPARATOR = 
 	        Comparator.comparingDouble(BookLocationResponse::getDistance);
 	
-	public BookLocationResponse(String label, String address, double lon, double lat, double distance) {
+	public BookLocationResponse(String owner, String label, String address, double lon, double lat, double distance) {
+		this.owner = owner;
 		this.label = label;
 		this.address = address;
 		this.lon = lon;
@@ -18,7 +19,8 @@ public class BookLocationResponse {
 	}
 	
 	private BookLocationResponse(Builder builder) {
-		this.type = builder.type;
+//		this.type = builder.type;
+		this.owner = builder.owner;
 		this.label = builder.label;
 		this.address = builder.address;
 		this.distance = builder.distance;
@@ -27,7 +29,8 @@ public class BookLocationResponse {
 		this.isHighlight = builder.isHighlight;
 	}
 
-	private String type;
+//	private String type;
+	private String owner;
     private String label;
     private String address;
     private double distance;
@@ -38,7 +41,8 @@ public class BookLocationResponse {
     private boolean isHighlight;
     
     // Getters
-    public String getType() { return type; }
+//    public String getType() { return type; }
+    public String getOwner() { return owner; }
 	public String getLabel() { return label; }
 	public String getAddress() { return address; }
 	public double getDistance() { return distance; }
@@ -52,7 +56,8 @@ public class BookLocationResponse {
     }
 	
 	public static class Builder {
-		private String type;
+//		private String type;
+		private String owner;
 	    private String label;
 	    private String address;
 	    private double distance;
@@ -60,10 +65,15 @@ public class BookLocationResponse {
 	    private double lon;
 	    private boolean isHighlight;
 	    
-	    public Builder type(String type) {
-            this.type = type;
-            return this;
-        }
+//	    public Builder type(String type) {
+//            this.type = type;
+//            return this;
+//        }
+	    
+	    public Builder owner(String owner) {
+	    	this.owner = owner;
+	    	return this;
+	    }
 	    
 	    public Builder label(String label) {
             this.label = label;
