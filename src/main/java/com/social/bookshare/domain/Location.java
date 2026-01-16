@@ -1,10 +1,8 @@
 package com.social.bookshare.domain;
 
-import java.time.LocalDateTime;
-
-import org.hibernate.annotations.CreationTimestamp;
 import org.locationtech.jts.geom.Point;
 
+import com.social.bookshare.config.entity.BaseEntity;
 import com.social.bookshare.utils.GeometryUtils;
 
 import jakarta.persistence.Column;
@@ -20,7 +18,7 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "user_locations")
-public class Location {
+public class Location extends BaseEntity {
 
 	protected Location() {}
 	
@@ -31,7 +29,6 @@ public class Location {
 		this.address = builder.address;
 		this.location = builder.location;
 		this.isActive = builder.isActive;
-		this.createdAt = builder.createdAt;
 	}
 	
 	@Id
@@ -55,10 +52,6 @@ public class Location {
 	@Column(name = "is_active", nullable = false)
 	private boolean isActive = true; // default true
 	
-	@CreationTimestamp
-	@Column(name = "created_at")
-	private LocalDateTime createdAt;
-	
 //	public void updateLocation(String label, double userLat, double userLon, boolean isActive) {
 //		this.label = label.strip();
 //		this.isActive = isActive;
@@ -77,7 +70,6 @@ public class Location {
 	public String getAddress() { return address; }
 	public Point getLocation() { return location; }
 	public boolean isActive() { return isActive; }
-	public LocalDateTime getCreatedAt() { return createdAt; }
 
 	// Builder
     public static Builder builder() {
@@ -91,7 +83,6 @@ public class Location {
     	private String address;
     	private Point location;
     	private boolean isActive;
-    	private LocalDateTime createdAt;
     	
     	public Builder id(Long id) {
             this.id = id;
@@ -125,11 +116,6 @@ public class Location {
     	
     	public Builder isActive(boolean isActive) {
             this.isActive = isActive;
-            return this;
-        }
-    	
-    	public Builder createdAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
             return this;
         }
     	

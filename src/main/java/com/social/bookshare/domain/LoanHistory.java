@@ -2,6 +2,8 @@ package com.social.bookshare.domain;
 
 import java.time.LocalDateTime;
 
+import com.social.bookshare.config.entity.BaseEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,7 +17,7 @@ import jakarta.validation.constraints.Min;
 
 @Entity
 @Table(name = "loan_histories")
-public class LoanHistory {
+public class LoanHistory extends BaseEntity {
 	
 	protected LoanHistory() {}
 	

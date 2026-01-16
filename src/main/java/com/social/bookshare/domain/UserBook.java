@@ -1,8 +1,6 @@
 package com.social.bookshare.domain;
 
-import java.time.LocalDateTime;
-
-import org.hibernate.annotations.UpdateTimestamp;
+import com.social.bookshare.config.entity.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,7 +16,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "user_books")
-public class UserBook {
+public class UserBook extends BaseEntity {
 
 	protected UserBook() {}
 	
@@ -29,7 +27,6 @@ public class UserBook {
 		this.book = builder.book;
 		this.comment = builder.comment;
 		this.status = builder.status;
-		this.updatedAt = builder.updatedAt;
 	}
 	
 	@Id
@@ -54,10 +51,6 @@ public class UserBook {
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 30)
 	private Status status = Status.AVAILABLE;
-	
-	@UpdateTimestamp
-	@Column(name = "updated_at")
-	private LocalDateTime updatedAt;
 	
 	public enum Status {
 		AVAILABLE, 
@@ -111,7 +104,6 @@ public class UserBook {
 	public String getIsbn13() { return (book != null) ? book.getIsbn13() : null; }
 	public String getComment() { return comment; }
 	public Status getStatus() { return status; }
-	public LocalDateTime getUpdatedAt() { return updatedAt; }
 
 	// Builder
     public static Builder builder() {
@@ -125,7 +117,6 @@ public class UserBook {
     	private Book book;
     	private String comment;
     	private Status status;
-    	private LocalDateTime updatedAt;
     	
     	public Builder id(Long id) {
             this.id = id;
@@ -159,11 +150,6 @@ public class UserBook {
     	
     	public Builder status(String status) {
             this.status = Status.valueOf(status.strip().toUpperCase());
-            return this;
-        }
-    	
-    	public Builder updatedAt(LocalDateTime updatedAt) {
-            this.updatedAt = updatedAt;
             return this;
         }
     	
