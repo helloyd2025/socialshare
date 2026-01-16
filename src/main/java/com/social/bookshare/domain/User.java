@@ -1,5 +1,7 @@
 package com.social.bookshare.domain;
 
+import java.util.Base64;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,6 +23,7 @@ public class User {
 		this.name = builder.name;
 		this.password = builder.password;
 		this.role = builder.role;
+		this.encryptionSalt = builder.encryptionSalt;
 	}
 	
 	@Id
@@ -46,11 +49,14 @@ public class User {
     @Column(name = "is_tfa_enabled", nullable = false)
     private boolean isTfaEnabled = false;
     
+    @Column(name = "encryption_salt", nullable = false, length = 64)
+    private String encryptionSalt; // Base64
+    
     public enum Role {
     	ADMIN, USER, GUEST
     }
     
-    public void updateUserPassword(String password) { // Get encoded only
+    public void updatePassword(String password) { // Get encoded only
         if (password == null || password.isBlank()) {
         	throw new IllegalArgumentException("Password cannot be null");
         }
@@ -58,11 +64,11 @@ public class User {
     }
     
     // 2FA
-    public void updateUserTfaSecret(String tfaSecret) {
-    	this.tfaSecret = tfaSecret.strip();
+    public void updateTfaSecret(String encryptedSecret) {
+    	this.tfaSecret = encryptedSecret.strip();
     }
     
-    public void updateUserIsTfaEnabled(boolean isTfaEnabled) {
+    public void updateIsTfaEnabled(boolean isTfaEnabled) {
     	this.isTfaEnabled = isTfaEnabled;
     }
 
@@ -74,6 +80,7 @@ public class User {
 	public Role getRole() { return role; }
 	public String getTfaSecret() { return tfaSecret; }
 	public boolean isTfaEnabled() { return isTfaEnabled; }
+	public byte[] getDecodedSalt() { return Base64.getDecoder().decode(this.encryptionSalt); }
 	
 	// Builder
     public static Builder builder() {
@@ -86,6 +93,7 @@ public class User {
         private String name;
         private String password;
         private Role role;
+        private String encryptionSalt;
 
         public Builder id(Long id) {
             this.id = id;
@@ -110,6 +118,11 @@ public class User {
         public Builder role(Role role) {
             this.role = role;
             return this;
+        }
+        
+        public Builder encryptionSalt(String encryptionSalt) {
+        	this.encryptionSalt = encryptionSalt;
+        	return this;
         }
 
         public User build() {

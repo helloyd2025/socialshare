@@ -1,10 +1,15 @@
 package com.social.bookshare.utils;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.security.spec.KeySpec;
 import java.util.Base64;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class EncryptionUtils {
@@ -13,28 +18,54 @@ public class EncryptionUtils {
 		throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
 	}
 
-	private static final String ALGORITHM = "AES";
+	private static final String ALGORITHM = "AES/GCM/NoPadding";
+    private static final int ITERATION_COUNT = 65536;
+    private static final int KEY_LENGTH = 256;
+    private static final int TAG_LENGTH_BIT = 128;
+    private static final int IV_LENGTH_BYTE = 12;
 	
-	public static String encrypt(String apiKey, String rawPassword) throws Exception {
-        SecretKeySpec keySpec = EncryptionUtils.deriveKey(rawPassword);
+	public static String encrypt(String plainText, String rawPassword, byte[] salt) throws Exception {
+        SecretKeySpec keySpec = deriveKey(rawPassword, salt);
+
+        byte[] iv = new byte[IV_LENGTH_BYTE];
+        new SecureRandom().nextBytes(iv); // Random IV
+
         Cipher cipher = Cipher.getInstance(ALGORITHM);
-        cipher.init(Cipher.ENCRYPT_MODE, keySpec);
-        byte[] encrypted = cipher.doFinal(apiKey.getBytes());
-        return Base64.getEncoder().encodeToString(encrypted);
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(TAG_LENGTH_BIT, iv);
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmSpec);
+        
+        byte[] cipherText = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+
+        // Combine IV and CipherText (to extract the IV later decryption)
+        ByteBuffer byteBuffer = ByteBuffer.allocate(iv.length + cipherText.length);
+        byteBuffer.put(iv);
+        byteBuffer.put(cipherText);
+
+        return Base64.getEncoder().encodeToString(byteBuffer.array());
     }
 
-    public static String decrypt(String encryptedKey, String rawPassword) throws Exception {
-        SecretKeySpec keySpec = EncryptionUtils.deriveKey(rawPassword);
+    public static String decrypt(String encryptedDataWithIv, String rawPassword, byte[] salt) throws Exception {
+        byte[] decoded = Base64.getDecoder().decode(encryptedDataWithIv);
+
+        // Separate IV and CipherText from combined data
+        ByteBuffer byteBuffer = ByteBuffer.wrap(decoded);
+        byte[] iv = new byte[IV_LENGTH_BYTE];
+        byteBuffer.get(iv);
+        byte[] cipherText = new byte[byteBuffer.remaining()];
+        byteBuffer.get(cipherText);
+
+        SecretKeySpec keySpec = deriveKey(rawPassword, salt);
+
         Cipher cipher = Cipher.getInstance(ALGORITHM);
-        cipher.init(Cipher.DECRYPT_MODE, keySpec);
-        byte[] decoded = Base64.getDecoder().decode(encryptedKey);
-        return new String(cipher.doFinal(decoded));
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(TAG_LENGTH_BIT, iv);
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmSpec);
+
+        return new String(cipher.doFinal(cipherText), StandardCharsets.UTF_8);
     }
 
-    private static SecretKeySpec deriveKey(String password) throws Exception {
-        // Generate a 256-bit key by hashing the password
-        MessageDigest sha = MessageDigest.getInstance("SHA-256");
-        byte[] key = sha.digest(password.getBytes(StandardCharsets.UTF_8));
-        return new SecretKeySpec(key, ALGORITHM);
+    private static SecretKeySpec deriveKey(String password, byte[] salt) throws Exception {
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATION_COUNT, KEY_LENGTH);
+        return new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
     }
 }

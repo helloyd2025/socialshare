@@ -54,7 +54,7 @@ public class TotpServiceImpl implements TotpService {
     }
 
     @Override
-    public boolean match(String secret, String code) {
+    public boolean matches(String secret, String code) {
         return codeVerifier.isValidCode(secret, code);
     }
 }

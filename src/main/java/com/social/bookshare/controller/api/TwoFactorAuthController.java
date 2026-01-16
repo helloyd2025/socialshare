@@ -36,7 +36,7 @@ public class TwoFactorAuthController {
         final String secret = totpService.generateNewSecret();
         final String qrCodeUri = totpService.generateQrCodeDataUri(secret, user.getEmail());
 
-        user.updateUserTfaSecret(secret); // 2FA not activated yet
+        user.updateTfaSecret(secret); // 2FA not activated yet
         return ResponseEntity.ok(new TotpSetupResponse(secret, qrCodeUri));
     }
 
@@ -48,10 +48,10 @@ public class TwoFactorAuthController {
     	User user = EntityMapper.getReference(User.class, principalDetails.getId());
 
         // Check TOTP code
-        if (!totpService.match(user.getTfaSecret(), verificationRequest.getCode())) 
+        if (!totpService.matches(user.getTfaSecret(), verificationRequest.getCode())) 
             return ResponseEntity.badRequest().build();
 
-        user.updateUserIsTfaEnabled(true); // 2FA activated finally
+        user.updateIsTfaEnabled(true); // 2FA activated finally
         return ResponseEntity.ok().build();
     }
 
@@ -59,8 +59,8 @@ public class TwoFactorAuthController {
     public ResponseEntity<Void> tfaDisable(@AuthenticationPrincipal PrincipalDetails principalDetails) {
     	User user = EntityMapper.getReference(User.class, principalDetails.getId());
 
-    	user.updateUserTfaSecret(null);
-    	user.updateUserIsTfaEnabled(false);
+    	user.updateTfaSecret(null);
+    	user.updateIsTfaEnabled(false);
 
         return ResponseEntity.ok().build();
     }

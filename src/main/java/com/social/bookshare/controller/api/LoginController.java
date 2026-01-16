@@ -43,12 +43,13 @@ public class LoginController {
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(HttpServletResponse response, @RequestBody AuthenticateRequest request) {
     	try {
-    		User user = userService.authenticate(request, Role.USER);
-    		TokenResponse tokenResponse = authService.issueTokensForPlainAuth(user);
+    		User user = userService.authenticatePlainLevel(request, Role.USER);
+    		TokenResponse tokenResponse;
     		
-    		if (tokenResponse.requiresTwoFactor()) {
-    			return ResponseEntity.ok(tokenResponse);
+    		if (user.isTfaEnabled()) {
+    			return ResponseEntity.ok(TokenResponse.tfaRequired());
     		} else {
+    			tokenResponse = authService.issueTokens(user);
     			this.setSecureCookie(tokenResponse.getRefreshToken(), response);
                 return ResponseEntity.ok(tokenResponse.toPublicResponse());
     		}
@@ -60,9 +61,10 @@ public class LoginController {
     }
     
     @PostMapping("/2fa/authenticate")
-    public ResponseEntity<TokenResponse> loginWith2FA(@RequestBody TwoFactorAuthRequest request, HttpServletResponse response) {
+    public ResponseEntity<TokenResponse> loginWith2FA(HttpServletResponse response, @RequestBody TwoFactorAuthRequest request) {
         try {
-            TokenResponse tokenResponse = authService.issueTokensForTwoFactorAuth(request);
+        	User user = userService.authenticateTwoFactorLevel(request, Role.USER);
+            TokenResponse tokenResponse = authService.issueTokens(user);
             
             this.setSecureCookie(tokenResponse.getRefreshToken(), response);
             return ResponseEntity.ok(tokenResponse.toPublicResponse());
@@ -79,7 +81,7 @@ public class LoginController {
     	try {
     		User user = userService.signup(request, Role.USER);
     		// As 2FA is disabled immediately after signing up, tokens will be issued.
-    		TokenResponse tokenResponse = authService.issueTokensForPlainAuth(user);
+    		TokenResponse tokenResponse = authService.issueTokens(user);
     		
     		this.setSecureCookie(tokenResponse.getRefreshToken(), response);
     		return ResponseEntity.status(HttpStatus.CREATED).body(tokenResponse.toPublicResponse());
