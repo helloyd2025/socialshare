@@ -6,6 +6,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 public class SecurityUtils {
 	
+	private SecurityUtils() {
+		throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+	}
+	
 	public static String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
