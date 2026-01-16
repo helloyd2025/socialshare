@@ -28,7 +28,7 @@ import com.social.bookshare.service.BookService;
 import com.social.bookshare.service.LocationService;
 import com.social.bookshare.service.UserBookService;
 import com.social.bookshare.utils.EntityMapper;
-import com.social.bookshare.utils.UserRoleUtils;
+import com.social.bookshare.utils.SecurityUtils;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -207,7 +207,7 @@ public class UserBookServiceImpl implements UserBookService {
 		UserBook userBook = userBookRepository.findById(request.getId())
 				.orElseThrow(() -> new EntityNotFoundException("User book not found"));
 		
-		if (userBook.getOwnerId() != userId || !UserRoleUtils.isUser()) { // Credential check
+		if (userBook.getOwnerId() != userId || !SecurityUtils.isUser()) { // Credential check
 			throw new AccessDeniedException("Illegal access: " + userId);
 		} else if (userBook.isOccupied()) { // Loan status check
 			throw new IllegalStateException("A book info on loan cannot be changed.");
@@ -233,7 +233,7 @@ public class UserBookServiceImpl implements UserBookService {
 		UserBook userBook = userBookRepository.findById(userBookId)
 				.orElseThrow(() -> new EntityNotFoundException("User book not found"));
 		
-		if (userBook.getOwnerId() != userId || !UserRoleUtils.isUser()) { // Credential check
+		if (userBook.getOwnerId() != userId || !SecurityUtils.isUser()) { // Credential check
 			throw new AccessDeniedException("Illegal access: " + userId);
 		} else if (userBook.isOccupied()) { // Loan status check
 			throw new IllegalStateException("A book info on loan cannot be changed.");

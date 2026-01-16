@@ -18,7 +18,7 @@ import com.social.bookshare.repository.UserBookRepository;
 import com.social.bookshare.service.LocationService;
 import com.social.bookshare.utils.EntityMapper;
 import com.social.bookshare.utils.GeometryUtils;
-import com.social.bookshare.utils.UserRoleUtils;
+import com.social.bookshare.utils.SecurityUtils;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -98,7 +98,7 @@ public class LocationServiceImpl implements LocationService {
     	Location location = locationRepository.findById(request.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Location not found"));
     	
-    	if (location.getUserId() != userId || !UserRoleUtils.isUser()) { // Credential check
+    	if (location.getUserId() != userId || !SecurityUtils.isUser()) { // Credential check
     		throw new AccessDeniedException("Illegal access: " + userId);
     	} else if (userBookRepository.isLocationOccupied(request.getId())) { // Occupied by loan
     		throw new IllegalStateException("The location info occupied by a book currently on loan cannot be changed.");
@@ -114,7 +114,7 @@ public class LocationServiceImpl implements LocationService {
 		Location location = locationRepository.findById(locationId)
                 .orElseThrow(() -> new EntityNotFoundException("Location not found"));
 		
-		if (location.getUserId() != userId || !UserRoleUtils.isUser()) { // Credential check
+		if (location.getUserId() != userId || !SecurityUtils.isUser()) { // Credential check
 			throw new AccessDeniedException("Illegal access: " + userId);
 		} else if (userBookRepository.isLocationOccupied(locationId)) { // Occupied by loan
     		throw new IllegalStateException("The location info occupied by a book currently on loan cannot be changed.");
