@@ -39,7 +39,7 @@ public class UserKeyServiceImpl implements UserKeyService {
 	    }
 
 	    byte[] salt = user.getDecodedSalt();
-	    String encryptedKey = EncryptionUtils.encrypt(request.getApiKey(), request.getPassword(), salt);
+	    String encryptedKey = EncryptionUtils.encryptHybrid(request.getPassword(), salt, request.getApiKey());
 
 	    UserKey userKey = UserKey.builder()
 	    		.user(user)

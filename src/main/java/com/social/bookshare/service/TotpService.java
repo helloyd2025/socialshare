@@ -1,8 +1,15 @@
 package com.social.bookshare.service;
 
-public interface TotpService {
+import com.social.bookshare.dto.request.TotpVerificationRequest;
+import com.social.bookshare.dto.response.TotpSetupResponse;
 
-    String generateNewSecret();
-    String generateQrCodeDataUri(String secret, String userIdentifier);
-    boolean matches(String secret, String code);
+public interface TotpService {
+	
+	static final String rawKeyHint = "RKH:";
+
+	boolean matches(String secret, String code);
+    TotpSetupResponse setupTfa(Long userId);
+    void verifyTfa(Long userId, String code);
+    void verifyTfa(Long userId, TotpVerificationRequest request);
+    void disableTfa(Long userId);
 }

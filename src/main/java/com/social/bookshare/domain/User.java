@@ -120,8 +120,8 @@ public class User {
             return this;
         }
         
-        public Builder encryptionSalt(String encryptionSalt) {
-        	this.encryptionSalt = encryptionSalt;
+        public Builder encryptionSalt(byte[] salt) {
+        	this.encryptionSalt = Base64.getEncoder().encodeToString(salt);
         	return this;
         }
 

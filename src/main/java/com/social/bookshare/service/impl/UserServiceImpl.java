@@ -2,7 +2,6 @@ package com.social.bookshare.service.impl;
 
 import java.security.SecureRandom;
 import java.time.Duration;
-import java.util.Base64;
 import java.util.List;
 
 import org.redisson.api.RBucket;
@@ -17,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.social.bookshare.domain.User;
 import com.social.bookshare.domain.User.Role;
 import com.social.bookshare.domain.UserKey;
+import com.social.bookshare.dto.DecryptionResult;
 import com.social.bookshare.dto.request.AuthenticateRequest;
 import com.social.bookshare.dto.request.PassUpdateRequest;
 import com.social.bookshare.dto.request.SignupRequest;
@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final RedissonClient redissonClient;
 	
-	private static final String PASSWORD_PREFIX = "PASSWORD:";
+	private static final String TEMP_PASSWORD_PREFIX = "TEMP_PASSWORD:";
 	
 	public UserServiceImpl(UserRepository userRepository, UserKeyRepository userKeyRepository, TotpService totpService, 
 			PasswordEncoder passwordEncoder, RedissonClient redissonClient) {
@@ -60,12 +60,17 @@ public class UserServiceImpl implements UserService {
 		} else if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
 			throw new BadCredentialsException("Illegal pass access"); // Pass check
 		}
-		
-		if (user.isTfaEnabled()) {
-			RBucket<String> passwordBucket = redissonClient.getBucket(PASSWORD_PREFIX + user.getId());
-			passwordBucket.set(request.getPassword(), Duration.ofMinutes(3));
-		}
 	    
+		if (user.isTfaEnabled()) { // Prepare 2FA
+			try {
+				String protectedPwd = EncryptionUtils.encryptWithSystemKey(request.getPassword());
+		        RBucket<String> pwdBucket = redissonClient.getBucket(TEMP_PASSWORD_PREFIX + user.getId());
+		        pwdBucket.set(protectedPwd, Duration.ofMinutes(3));
+			} catch (Exception e) {
+				throw new RuntimeException("Secure session preparation failed");
+			}
+		}
+		
 		return user;
 	}
 	
@@ -80,26 +85,30 @@ public class UserServiceImpl implements UserService {
 		} else if (role != user.getRole()) {
 			throw new AccessDeniedException("Illegal role access");
 		}
+		RBucket<String> pwdBucket = redissonClient.getBucket(TEMP_PASSWORD_PREFIX + user.getId());
+		String rawPassword;
 		
-		RBucket<String> passwordBucket = redissonClient.getBucket(PASSWORD_PREFIX + user.getId());
-	    String password = passwordBucket.get();
-	    
-	    if (password == null) {
-	        throw new BadCredentialsException("Expired or revoked request. Please login again.");
+		try {
+	        rawPassword = EncryptionUtils.decryptWithSystemKey(pwdBucket.get());
+	    } catch (Exception e) {
+	        throw new BadCredentialsException("Session expired");
 	    }
 		try {
-			String decryptedSecret = EncryptionUtils.decrypt(user.getTfaSecret(), password, user.getDecodedSalt());
-			
-	        if (!totpService.matches(decryptedSecret, request.getCode())) {
-	            throw new BadCredentialsException("Invalid 2FA code");
+			DecryptionResult decryptedResult = EncryptionUtils.decryptFlexibly(rawPassword, user.getDecodedSalt(), user.getTfaSecret());
+	        
+	        if (!totpService.matches(decryptedResult.getPlainText(), request.getCode())) {
+	        	throw new BadCredentialsException("Invalid 2FA code");
 	        }
+	        if (decryptedResult.isUpgradeRequired()) {
+	            String upgradedSecret = EncryptionUtils.encryptHybrid(rawPassword, user.getDecodedSalt(), decryptedResult.getPlainText());
+	            user.updateTfaSecret(upgradedSecret);
+	        }
+	        pwdBucket.delete();
+			return user;
+			
 		} catch (Exception e) {
-	        throw new BadCredentialsException("Verification failed");
-	    } finally {
-	    	passwordBucket.delete();
+	        throw new BadCredentialsException("Verification failed: " + e.getMessage());
 	    }
-		
-		return user;
 	}
 
 	@Override
@@ -114,14 +123,14 @@ public class UserServiceImpl implements UserService {
 		// Generate unique salt value
 		byte[] salt = new byte[16];
 	    new SecureRandom().nextBytes(salt);
-	    String base64Salt = Base64.getEncoder().encodeToString(salt);
+//	    String base64Salt = Base64.getEncoder().encodeToString(salt);
 		
 		User user = User.builder()
                 .email(request.getEmail())
                 .name(request.getName())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(role)
-                .encryptionSalt(base64Salt)
+                .encryptionSalt(salt)
                 .build();
 		
 		return userRepository.save(user);
@@ -139,20 +148,22 @@ public class UserServiceImpl implements UserService {
 	        throw new BadCredentialsException("Illegal pass access");
 	    }
 		
-		try { // Re-encrypt which encrypted by password
-			// 2FA secret
-			if (user.isTfaEnabled() && user.getTfaSecret() != null) {
-				String rawTfaSecret = EncryptionUtils.decrypt(user.getTfaSecret(), request.getCurrentPassword(), user.getDecodedSalt());
-				String reEncryptedSecret = EncryptionUtils.encrypt(rawTfaSecret, request.getNewPassword(), user.getDecodedSalt());
-				user.updateTfaSecret(reEncryptedSecret);
-			}
-			// API keys
+		try {
+			// [1] UserKey(API Keys)
 			List<UserKey> userKeys = userKeyRepository.findByUser(user);
 			for (UserKey userKey : userKeys) {
-	            String rawKey = EncryptionUtils.decrypt(userKey.getKey(), request.getCurrentPassword(), user.getDecodedSalt());
-	            String reEncryptedKey = EncryptionUtils.encrypt(rawKey, request.getNewPassword(), user.getDecodedSalt());
+	            String rawKey = EncryptionUtils.decryptHybrid(request.getCurrentPassword(), user.getDecodedSalt(), userKey.getKey());
+	            String reEncryptedKey = EncryptionUtils.encryptHybrid(request.getNewPassword(), user.getDecodedSalt(), rawKey);
 	            userKey.updateKey(reEncryptedKey);
 		    }
+			// [2] 2FA Secret
+	        if (user.getTfaSecret() != null) {
+	            DecryptionResult decryptedResult = EncryptionUtils
+	            		.decryptFlexibly(request.getCurrentPassword(), user.getDecodedSalt(), user.getTfaSecret());
+	            String reEncryptedSecret = EncryptionUtils
+	            		.encryptHybrid(request.getNewPassword(), user.getDecodedSalt(), decryptedResult.getPlainText());
+	            user.updateTfaSecret(reEncryptedSecret);
+	        }
 		} catch (Exception e) {
             throw new RuntimeException("Failed to re-encrypt data during password update", e);
         }
