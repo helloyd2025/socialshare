@@ -26,7 +26,7 @@ public class TwoFactorAuthController {
     }
 
     @PostMapping("/setup")
-    public ResponseEntity<TotpSetupResponse> tfaSetup(@AuthenticationPrincipal PrincipalDetails principalDetails) { // 수정
+    public ResponseEntity<TotpSetupResponse> tfaSetup(@AuthenticationPrincipal PrincipalDetails principalDetails) {
     	// Start setting up 2FA, generate a QR code.
         try {
         	TotpSetupResponse response = totpService.setupTfa(principalDetails.getId());

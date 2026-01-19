@@ -91,23 +91,25 @@ public class UserServiceImpl implements UserService {
 		try {
 	        rawPassword = EncryptionUtils.decryptWithSystemKey(pwdBucket.get());
 	    } catch (Exception e) {
-	        throw new BadCredentialsException("Session expired");
+	        throw new BadCredentialsException("Invalid or expired request");
 	    }
 		try {
-			DecryptionResult decryptedResult = EncryptionUtils.decryptFlexibly(rawPassword, user.getDecodedSalt(), user.getTfaSecret());
+			DecryptionResult rawSecretResult = EncryptionUtils.decryptFlexibly(rawPassword, user.getDecodedSalt(), user.getTfaSecret());
 	        
-	        if (!totpService.matches(decryptedResult.getPlainText(), request.getCode())) {
+	        if (!totpService.matches(rawSecretResult.getPlainText(), request.getCode())) {
 	        	throw new BadCredentialsException("Invalid 2FA code");
 	        }
-	        if (decryptedResult.isUpgradeRequired()) {
-	            String upgradedSecret = EncryptionUtils.encryptHybrid(rawPassword, user.getDecodedSalt(), decryptedResult.getPlainText());
+	        if (rawSecretResult.isUpgradeRequired()) {
+	            String upgradedSecret = EncryptionUtils.encryptHybrid(rawPassword, user.getDecodedSalt(), rawSecretResult.getPlainText());
 	            user.updateTfaSecret(upgradedSecret);
 	        }
 	        pwdBucket.delete();
 			return user;
 			
-		} catch (Exception e) {
+		} catch (BadCredentialsException e) {
 	        throw new BadCredentialsException("Verification failed: " + e.getMessage());
+	    } catch (Exception e) {
+	        throw new RuntimeException("Verification failed");
 	    }
 	}
 
@@ -152,16 +154,16 @@ public class UserServiceImpl implements UserService {
 			// [1] UserKey(API Keys)
 			List<UserKey> userKeys = userKeyRepository.findByUser(user);
 			for (UserKey userKey : userKeys) {
-	            String rawKey = EncryptionUtils.decryptHybrid(request.getCurrentPassword(), user.getDecodedSalt(), userKey.getKey());
-	            String reEncryptedKey = EncryptionUtils.encryptHybrid(request.getNewPassword(), user.getDecodedSalt(), rawKey);
-	            userKey.updateKey(reEncryptedKey);
+	            String rawUserKey = EncryptionUtils.decryptHybrid(request.getCurrentPassword(), user.getDecodedSalt(), userKey.getKey());
+	            String reEncryptedUserKey = EncryptionUtils.encryptHybrid(request.getNewPassword(), user.getDecodedSalt(), rawUserKey);
+	            userKey.updateKey(reEncryptedUserKey);
 		    }
 			// [2] 2FA Secret
 	        if (user.getTfaSecret() != null) {
-	            DecryptionResult decryptedResult = EncryptionUtils
+	            DecryptionResult rawSecretResult = EncryptionUtils
 	            		.decryptFlexibly(request.getCurrentPassword(), user.getDecodedSalt(), user.getTfaSecret());
 	            String reEncryptedSecret = EncryptionUtils
-	            		.encryptHybrid(request.getNewPassword(), user.getDecodedSalt(), decryptedResult.getPlainText());
+	            		.encryptHybrid(request.getNewPassword(), user.getDecodedSalt(), rawSecretResult.getPlainText());
 	            user.updateTfaSecret(reEncryptedSecret);
 	        }
 		} catch (Exception e) {
