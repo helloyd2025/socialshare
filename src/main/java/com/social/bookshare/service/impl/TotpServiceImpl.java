@@ -3,6 +3,7 @@ package com.social.bookshare.service.impl;
 import static dev.samstevens.totp.util.Utils.getDataUriForImage;
 
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,11 +60,6 @@ public class TotpServiceImpl implements TotpService {
     }
     
     @Override
-    public boolean matches(String secret, String code) {
-        return codeVerifier.isValidCode(secret, code);
-    }
-    
-    @Override
     @Transactional
     public TotpSetupResponse setupTfa(Long userId) {
     	User user = userRepository.findById(userId)
@@ -78,7 +74,7 @@ public class TotpServiceImpl implements TotpService {
     	
     	try {
         	String encryptedSecret = EncryptionUtils.encryptWithSystemKey(secret);
-        	user.updateTfaSecret(rawKeyHint + encryptedSecret); // Set 2FA secret only (not activated yet)
+        	user.updateTfaSecret(encryptedSecret); // Set 2FA secret only (not activated yet)
     	} catch (Exception e) {
             throw new RuntimeException("2FA secret encryption failed", e);
     	}
@@ -88,29 +84,43 @@ public class TotpServiceImpl implements TotpService {
     
     @Override
     @Transactional(readOnly = true)
-    public void verifyTfa(Long userId, String code) {
-    	this.verifyTfa(userId, new TotpVerificationRequest(code));
+    public User authenticateTfa(Long userId, String code) {
+    	User user = userRepository.findById(userId)
+    			.orElseThrow(() -> new UsernameNotFoundException("User not found in token."));
+    	
+    	if (!user.isTfaEnabled()) throw new IllegalStateException("2FA is not enabled for this user.");
+
+		String encryptedSecret = user.getTfaSecret();
+		String decryptedSecret;
+		
+		try {
+			decryptedSecret = EncryptionUtils.decryptWithSystemKey(encryptedSecret);
+		} catch (Exception e) {
+			throw new RuntimeException("2FA secret decryption failed", e);
+		}
+		
+		if (!codeVerifier.isValidCode(decryptedSecret, code)) {
+			throw new BadCredentialsException("Invalid 2FA code");
+		} else {
+			return user;
+		}
     }
     
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public void verifyTfa(Long userId, TotpVerificationRequest request) {
     	User user = userRepository.findById(userId)
     			.orElseThrow(() -> new EntityNotFoundException("User not found"));
     	
-    	if (user.getTfaSecret() == null) {
-            throw new IllegalStateException("2FA setup not initiated");
-        }
+    	if (user.getTfaSecret() == null) throw new IllegalStateException("2FA setup not initiated");
+    	
     	String encryptedSecret = user.getTfaSecret();
         String decryptedSecret;
         
-        if (!encryptedSecret.startsWith(rawKeyHint)) {
-			throw new UnsupportedOperationException("This method is only used on 2FA initial activation.");
-        }
 		try {
-			decryptedSecret = EncryptionUtils.decryptWithSystemKey(encryptedSecret.substring(rawKeyHint.length()));
+			decryptedSecret = EncryptionUtils.decryptWithSystemKey(encryptedSecret);
 		} catch (Exception e) {
-			throw new RuntimeException("2FA decryption failed", e);
+			throw new RuntimeException("2FA secret decryption failed", e);
 		}
         
         if (!codeVerifier.isValidCode(decryptedSecret, request.getCode())) {

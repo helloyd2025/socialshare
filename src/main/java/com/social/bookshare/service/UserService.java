@@ -5,12 +5,11 @@ import com.social.bookshare.domain.User.Role;
 import com.social.bookshare.dto.request.AuthenticateRequest;
 import com.social.bookshare.dto.request.PassUpdateRequest;
 import com.social.bookshare.dto.request.SignupRequest;
-import com.social.bookshare.dto.request.TwoFactorAuthRequest;
 
 public interface UserService {
 
 	public User authenticatePlainLevel(AuthenticateRequest request, Role role);
-	public User authenticateTwoFactorLevel(TwoFactorAuthRequest request, Role role);
+	public User authenticateTwoFactorLevel(String preAuthToken, String totpCode);
 	
 	public User signup(SignupRequest request, Role role);
 	

@@ -1,5 +1,6 @@
 package com.social.bookshare.controller.api;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -46,7 +47,7 @@ public class TwoFactorAuthController {
     		totpService.verifyTfa(principalDetails.getId(), request);
     		return ResponseEntity.ok().build();
     	} catch (EntityNotFoundException | IllegalStateException | BadCredentialsException e) {
-    		return ResponseEntity.badRequest().build();
+    		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     	} catch (Exception e) {
     		return ResponseEntity.internalServerError().build();
     	}

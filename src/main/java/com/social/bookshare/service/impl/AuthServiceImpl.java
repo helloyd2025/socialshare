@@ -42,9 +42,9 @@ public class AuthServiceImpl implements AuthService {
 	}
 	
 	@Override
-	@Transactional(readOnly = true)
+	@Transactional
 	public TokenResponse reissueTokens(String refreshToken) {
-		if (!jwtTokenProvider.validateToken(refreshToken)) {
+		if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
 			throw new AccessDeniedException("Refresh Token expired. Log in again, please.");
 		}
 		
@@ -54,10 +54,15 @@ public class AuthServiceImpl implements AuthService {
 	    String savedToken = refreshTokenBucket.get();
 		
 	    if (savedToken == null || !savedToken.equals(refreshToken)) {
+	    	// If the provided refresh token does not match the one stored in Redis,
+	    	// it indicates a potential token theft or reuse.
+	    	// Invalidate all existing refresh tokens for this user by deleting the entry from Redis
+	    	// to force a re-login on all devices.
+	    	refreshTokenBucket.delete();
 	    	throw new AccessDeniedException("Invalid or revoked token");
 	    }
 
-	    User user = userRepository.findById(userId) // Data required immediately
+	    User user = userRepository.findById(userId)
 	            .orElseThrow(() -> new EntityNotFoundException("User not found"));
         
 		return this.createTokens(user);

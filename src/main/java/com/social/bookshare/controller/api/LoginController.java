@@ -11,9 +11,11 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.social.bookshare.config.security.JwtTokenProvider;
 import com.social.bookshare.domain.User;
 import com.social.bookshare.domain.User.Role;
 import com.social.bookshare.dto.request.AuthenticateRequest;
@@ -31,10 +33,12 @@ public class LoginController {
 
 	private final UserService userService;
 	private final AuthService authService;
+	private final JwtTokenProvider jwtTokenProvider;
 
-    public LoginController(UserService userService, AuthService authService) {
+    public LoginController(UserService userService, AuthService authService, JwtTokenProvider jwtTokenProvider) {
         this.userService = userService;
         this.authService = authService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
     
     @Value("${jwt.refreshTokenValidTime}")
@@ -44,12 +48,12 @@ public class LoginController {
     public ResponseEntity<TokenResponse> login(HttpServletResponse response, @RequestBody AuthenticateRequest request) {
     	try {
     		User user = userService.authenticatePlainLevel(request, Role.USER);
-    		TokenResponse tokenResponse;
     		
     		if (user.isTfaEnabled()) {
-    			return ResponseEntity.ok(TokenResponse.tfaRequired());
+    			String preAuthToken = jwtTokenProvider.createPreAuthToken(user.getId(), user.getEmail());
+    			return ResponseEntity.ok(TokenResponse.tfaRequired(preAuthToken));
     		} else {
-    			tokenResponse = authService.issueTokens(user);
+    			TokenResponse tokenResponse = authService.issueTokens(user);
     			this.setSecureCookie(tokenResponse.getRefreshToken(), response);
                 return ResponseEntity.ok(tokenResponse.toPublicResponse());
     		}
@@ -61,15 +65,19 @@ public class LoginController {
     }
     
     @PostMapping("/2fa/authenticate")
-    public ResponseEntity<TokenResponse> loginWith2FA(HttpServletResponse response, @RequestBody TwoFactorAuthRequest request) {
+    public ResponseEntity<TokenResponse> loginWith2FA(
+    		HttpServletResponse response, 
+    		@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+    		@RequestBody TwoFactorAuthRequest request) {
         try {
-        	User user = userService.authenticateTwoFactorLevel(request, Role.USER);
+        	String preAuthToken = resolveToken(authorizationHeader);
+        	User user = userService.authenticateTwoFactorLevel(preAuthToken, request.getCode());
             TokenResponse tokenResponse = authService.issueTokens(user);
             
             this.setSecureCookie(tokenResponse.getRefreshToken(), response);
             return ResponseEntity.ok(tokenResponse.toPublicResponse());
             
-        } catch (UsernameNotFoundException | AccessDeniedException | BadCredentialsException e) {
+        } catch (UsernameNotFoundException | AccessDeniedException | IllegalStateException | BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -119,5 +127,13 @@ public class LoginController {
 				.build();
 		
 		response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+    }
+    
+    private String resolveToken(String bearerToken) {
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        } else {
+        	return null;
+        }
     }
 }

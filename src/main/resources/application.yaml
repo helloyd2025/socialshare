@@ -2,12 +2,14 @@ server:
   port: 8080
 
 spring:
+  config:
+    import: optional:file:.env[.properties] # .env import
   application:
     name: bookshare
   datasource:
-    url: jdbc:postgresql://localhost:5432/your_database_name
-    username: your_username
-    password: your_password
+    url: ${DB_HOST}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   data:
     redis:
@@ -24,12 +26,36 @@ spring:
         "[format_sql]": true
     show-sql: true
 
+genai:
+  api:
+    key: ${GEMINI_API_KEY}
+  model: gemini-2.5-flash-lite
+
 jwt:
-  secret: YourSuperSecretKeyForJWTsWhichIsLongAndSecure
-  accessTokenValidTime: 3600000  # 1 hour (ms)
-  refreshTokenValidTime: 604800000 # 7 days
+  secret: ${JWT_SECRET}
+  accessTokenValidTime: 3600000     # 1 hour (ms)
+  refreshTokenValidTime: 604800000  # 7 days
+  preAuthTokenValidTime: 180000     # 3 minutes
 
 data4library:
   api:
     url: http://data4library.kr/api
-    key: YOUR_DATA4LIBRARY_API_KEY
+    key: ${DATA4LIB_KEY}
+
+secret:
+  encryption:
+    key: ${SYS_ENCRYPT_KEY}
+
+bucket4j:
+  enabled: true
+  filters:
+    # '토큰 재발급' 엔드포인트에 대한 규칙
+    cache-name: buckets
+    id: "reissue-rate-limit"
+    url: /api/v1/user/reissue # 규칙을 적용할 URL 경로
+    strategy: ip # 클라이언트를 식별할 방법 (IP 주소 기준)
+    rate-limits:
+      bandwidth:
+        capacity: 10 # 버킷(요청 가능 횟수)의 총량
+        time: 1      # 버킷이 재충전되는 시간
+        unit: minutes # 시간 단위 (seconds, minutes, hours, days)

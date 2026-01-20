@@ -34,24 +34,28 @@ dependencies {
 	//implementation 'org.hibernate:hibernate-spatial:5.6.11.Final'
 	implementation 'org.hibernate.orm:hibernate-spatial'
 	implementation 'org.redisson:redisson-spring-boot-starter:4.1.0'
-	// JWT for token-based authentication
+	implementation 'com.giffing.bucket4j.spring.boot.starter:bucket4j-spring-boot-starter:0.14.0-RC1'
+	// JWT
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-	//implementation 'com.querydsl:querydsl-jpa:5.0.0'
-	//implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
 	// TOTP
 	implementation 'dev.samstevens.totp:totp-spring-boot-starter:1.7.1'
 	implementation 'com.google.zxing:javase:3.5.0'
 	implementation 'com.google.zxing:core:3.5.0'
-	// QueryDSL Spatial
-    //implementation "com.querydsl:querydsl-spatial"
-    // Hibernate Spatial (PostGIS)
-    //implementation "org.hibernate.orm:hibernate-spatial"
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	// QueryDSL
+	//implementation 'com.querydsl:querydsl-jpa:5.0.0'
+	//implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    //implementation "com.querydsl:querydsl-spatial" // QueryDSL Spatial
+    //implementation "org.hibernate.orm:hibernate-spatial" // Hibernate Spatial (PostGIS)
+    // Tika
+    implementation 'org.apache.tika:tika-core:2.9.1'
+    implementation 'org.apache.tika:tika-parsers:2.9.1'
+    // Google genai
+    implementation 'com.google.genai:google-genai:1.0.0'
+    
 	// test
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-	//testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
