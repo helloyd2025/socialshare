@@ -34,10 +34,12 @@ import jakarta.persistence.EntityNotFoundException;
 public class BookServiceImpl implements BookService {
 
 	private final BookRepository bookRepository;
+	private final GeometryUtils geometryUtils;
     private final RestTemplate restTemplate;
     
-    public BookServiceImpl(BookRepository bookRepository, RestTemplate restTemplate) {
+    public BookServiceImpl(BookRepository bookRepository, GeometryUtils geometryUtils, RestTemplate restTemplate) {
     	this.bookRepository = bookRepository;
+    	this.geometryUtils = geometryUtils;
     	this.restTemplate = restTemplate;
     }
 
@@ -107,7 +109,7 @@ public class BookServiceImpl implements BookService {
     	List<BookLocationResponse> privateResponses = new ArrayList<>();
     	List<BookLocationResponse> libraryResponses = new ArrayList<>();
 
-        Point userLocation = GeometryUtils.createPoint(userLon, userLat);
+        Point userLocation = geometryUtils.createPoint(userLon, userLat);
         
         // 1. DB private books (PostGIS)
         List<BookLocationProjection> dbResults = bookRepository.findPrivateBookLocationsWithDistance(isbn13, userLocation, pageSize/2);
@@ -134,7 +136,7 @@ public class BookServiceImpl implements BookService {
         	double libLat = Double.parseDouble(lib.getLatitude());
             double libLon = Double.parseDouble(lib.getLongitude());
             
-            double distance = GeometryUtils.calculateDistance(libLon, libLat, userLon, userLat);
+            double distance = geometryUtils.calculateDistance(libLon, libLat, userLon, userLat);
             
             libraryResponses.add(BookLocationResponse.builder()
 //            		.type("LIBRARY")

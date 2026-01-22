@@ -15,49 +15,38 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.social.bookshare.dto.DecryptionResult;
-import com.social.bookshare.service.TotpService;
-
 @Component
 public class EncryptionUtils {
 	
-	private EncryptionUtils() {
-		throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
-	}
-
 	private static final String ALGORITHM = "AES/GCM/NoPadding";
     private static final int ITERATION_COUNT = 65536;
     private static final int KEY_LENGTH = 256;
     private static final int TAG_LENGTH_BIT = 128;
     private static final int IV_LENGTH_BYTE = 12;
 
-    private static String systemKey;
+    private final String systemKey;
+    private final SecureRandom secureRandom;
 
-    @Value("${secret.encryption.key}")
-    public void setSystemKey(String value) {
-        systemKey = value;
+    public EncryptionUtils(@Value("${secret.encryption.key}") String systemKey, SecureRandom secureRandom) {
+        this.systemKey = systemKey;
+        this.secureRandom = secureRandom;
     }
     
-    public static DecryptionResult decryptFlexibly(String userKey, byte[] salt, String encryptedData) throws Exception {
-        if (encryptedData.startsWith(TotpService.rawKeyHint)) {
-        	String pureEncrypted = encryptedData.substring(TotpService.rawKeyHint.length());
-            String plainText = decryptWithSystemKey(pureEncrypted);
-            return new DecryptionResult(plainText, true);
-        } else {
-        	String plainText = decryptHybrid(userKey, salt, encryptedData);
-            return new DecryptionResult(plainText, false);
-        }
+    public byte[] generateRandomBytes(int length) {
+        byte[] bytes = new byte[length];
+        secureRandom.nextBytes(bytes);
+        return bytes;
     }
     
-//	public static String encrypt(String userKey, byte[] salt, String plainText) throws Exception {
+//	public String encrypt(String userKey, byte[] salt, String plainText) throws Exception {
 //        return encipher(deriveKey(userKey, salt), plainText);
 //    }
 //
-//    public static String decrypt(String userKey, byte[] salt, String encryptedDataWithIv) throws Exception {
+//    public String decrypt(String userKey, byte[] salt, String encryptedDataWithIv) throws Exception {
 //    	return decipher(deriveKey(userKey, salt), encryptedDataWithIv);
 //    }
 
-    private static SecretKeySpec deriveKey(String userKey, byte[] salt) throws Exception {
+    private SecretKeySpec deriveKey(String userKey, byte[] salt) throws Exception {
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         KeySpec spec = new PBEKeySpec(userKey.toCharArray(), salt, ITERATION_COUNT, KEY_LENGTH);
         return new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
@@ -65,38 +54,38 @@ public class EncryptionUtils {
 
     // --- System-wide Key Encryption/Decryption ---
 
-    public static String encryptWithSystemKey(String plainText) throws Exception {
+    public String encryptWithSystemKey(String plainText) throws Exception {
         return encipher(deriveSystemKey(), plainText);
     }
 
-    public static String decryptWithSystemKey(String encryptedDataWithIv) throws Exception {
+    public String decryptWithSystemKey(String encryptedDataWithIv) throws Exception {
     	return decipher(deriveSystemKey(), encryptedDataWithIv);
     }
 
-    private static SecretKeySpec deriveSystemKey() {
+    private SecretKeySpec deriveSystemKey() {
         byte[] keyBytes = Base64.getDecoder().decode(systemKey);
         // Ensure the key length is 256 bits for AES-256
         if (keyBytes.length != KEY_LENGTH / 8) {
             throw new IllegalArgumentException("Invalid system encryption key length. Must be 32 bytes after Base64 decoding.");
+        } else {
+        	return new SecretKeySpec(keyBytes, "AES");
         }
-        return new SecretKeySpec(keyBytes, "AES");
     }
     
     // --- Hybrid Encryption/Decryption ---
     
-    public static String encryptHybrid(String userKey, byte[] salt, String plainText) throws Exception {
+    public String encryptHybrid(String userKey, byte[] salt, String plainText) throws Exception {
         return encipher(deriveCombinedKey(userKey, salt), plainText);
     }
 
-    public static String decryptHybrid(String userKey, byte[] salt, String encryptedData) throws Exception {
+    public String decryptHybrid(String userKey, byte[] salt, String encryptedData) throws Exception {
         return decipher(deriveCombinedKey(userKey, salt), encryptedData);
     }
 
-    private static SecretKeySpec deriveCombinedKey(String userKey, byte[] salt) throws Exception {
+    private SecretKeySpec deriveCombinedKey(String userKey, byte[] salt) throws Exception {
         byte[] uKey = deriveKey(userKey, salt).getEncoded();
         byte[] sKey = deriveSystemKey().getEncoded();
-        
-        // 두 키를 XOR 연산하여 새로운 결합 키 생성 (보안 강화)
+
         byte[] combined = new byte[32];
         for (int i = 0; i < 32; i++) {
             combined[i] = (byte) (uKey[i] ^ sKey[i]);
@@ -106,9 +95,9 @@ public class EncryptionUtils {
     
     // --- base ---
     
-	private static String encipher(SecretKeySpec keySpec, String plainText) throws Exception {
-        byte[] iv = new byte[IV_LENGTH_BYTE];
-        new SecureRandom().nextBytes(iv); // Random IV
+	private String encipher(SecretKeySpec keySpec, String plainText) throws Exception {
+		byte[] iv = new byte[IV_LENGTH_BYTE];
+        secureRandom.nextBytes(iv); // Random IV
 
         Cipher cipher = Cipher.getInstance(ALGORITHM);
         GCMParameterSpec gcmSpec = new GCMParameterSpec(TAG_LENGTH_BIT, iv);
@@ -124,7 +113,7 @@ public class EncryptionUtils {
         return Base64.getEncoder().encodeToString(byteBuffer.array());
     }
 	
-	private static String decipher(SecretKeySpec keySpec, String encryptedDataWithIv) throws Exception {
+	private String decipher(SecretKeySpec keySpec, String encryptedDataWithIv) throws Exception {
     	byte[] decoded = Base64.getDecoder().decode(encryptedDataWithIv);
 
         // Separate IV and CipherText

@@ -3,7 +3,6 @@ package com.social.bookshare.domain;
 import org.locationtech.jts.geom.Point;
 
 import com.social.bookshare.config.entity.BaseEntity;
-import com.social.bookshare.utils.GeometryUtils;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -106,11 +105,6 @@ public class Location extends BaseEntity {
     	
     	public Builder location(Point location) {
     		this.location = location;
-            return this;
-        }
-    	
-    	public Builder location(double lat, double lon) { // lat-lon
-    		this.location = GeometryUtils.createPoint(lon, lat); // lon-lat
             return this;
         }
     	

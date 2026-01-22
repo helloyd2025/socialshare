@@ -12,7 +12,7 @@ import com.social.bookshare.domain.Location;
 import com.social.bookshare.domain.User;
 import com.social.bookshare.dto.request.LocationRegisterRequest;
 import com.social.bookshare.dto.request.LocationUpdateRequest;
-import com.social.bookshare.dto.response.UserLocationReponse; // Added import
+import com.social.bookshare.dto.response.UserLocationReponse;
 import com.social.bookshare.repository.LocationRepository;
 import com.social.bookshare.repository.UserBookRepository;
 import com.social.bookshare.service.LocationService;
@@ -27,16 +27,21 @@ public class LocationServiceImpl implements LocationService {
 
 	private final LocationRepository locationRepository;
 	private final UserBookRepository userBookRepository;
+	private final GeometryUtils geometryUtils;
+	private final EntityMapper entityMapper;
     
-    public LocationServiceImpl(LocationRepository locationRepository, UserBookRepository userBookRepository) {
+    public LocationServiceImpl(LocationRepository locationRepository, UserBookRepository userBookRepository, 
+    		GeometryUtils geometryUtils, EntityMapper entityMapper) {
     	this.locationRepository = locationRepository;
     	this.userBookRepository = userBookRepository;
+    	this.geometryUtils = geometryUtils;
+    	this.entityMapper = entityMapper;
     }
     
     @Override
     @Transactional(readOnly = true)
 	public List<UserLocationReponse> getUserLocations(Long userId) {
-		return locationRepository.findByUser(EntityMapper.getReference(User.class, userId)).stream()
+		return locationRepository.findByUser(entityMapper.getReference(User.class, userId)).stream()
 				.<UserLocationReponse>map(l -> UserLocationReponse.builder()
 						.id(l.getId())
 						.label(l.getLabel())
@@ -51,16 +56,16 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional(readOnly = true)
 	public Location getUserLocation(Long userId, String label) {
-		return locationRepository.findByUserAndLabel(EntityMapper.getReference(User.class, userId), label)
+		return locationRepository.findByUserAndLabel(entityMapper.getReference(User.class, userId), label)
 				.orElseThrow(() -> new EntityNotFoundException("Location not found"));
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public Location getUserLocation(Long userId, double lat, double lon) {
-		Point location = GeometryUtils.createPoint(lon, lat);
+		Point location = geometryUtils.createPoint(lon, lat);
 		
-		return locationRepository.findByUserAndLocation(EntityMapper.getReference(User.class, userId), location)
+		return locationRepository.findByUserAndLocation(entityMapper.getReference(User.class, userId), location)
 				.orElseThrow(() -> new EntityNotFoundException("Location not found"));
 	}
     
@@ -68,10 +73,10 @@ public class LocationServiceImpl implements LocationService {
     @Transactional
     public Location registerUserLocation(Long userId, LocationRegisterRequest request) {
     	Location userLocation = Location.builder()
-    			.user(EntityMapper.getReference(User.class, userId))
+    			.user(entityMapper.getReference(User.class, userId))
     			.label(request.getLabel())
     			.address(request.getAddress())
-    			.location(request.getUserLat(), request.getUserLon())
+    			.location(geometryUtils.createPoint(request.getUserLon(), request.getUserLat()))
     			.isActive(request.isActive())
     			.build();
     	
@@ -82,10 +87,10 @@ public class LocationServiceImpl implements LocationService {
     @Transactional
     public Location registerUserLocation(Long userId, String label, String address, double userLat, double userLon, boolean isActive) {
     	Location userLocation = Location.builder()
-    			.user(EntityMapper.getReference(User.class, userId))
+    			.user(entityMapper.getReference(User.class, userId))
     			.label(label)
     			.address(address)
-    			.location(userLat, userLon)
+    			.location(geometryUtils.createPoint(userLon, userLat))
     			.isActive(isActive)
     			.build();
     	

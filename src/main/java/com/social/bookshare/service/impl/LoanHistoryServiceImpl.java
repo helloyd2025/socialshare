@@ -37,24 +37,26 @@ public class LoanHistoryServiceImpl implements LoanHistoryService {
 
     private final LoanHistoryRepository loanHistoryRepository;
     private final NotificationService notificationService;
+    private final EntityMapper entityMapper;
     private final RedissonClient redissonClient;
     
     private static final String PENDING_LOAN_PREFIX = "LOAN_HISTORY:LOAN:REQUEST:";
     private static final String RLOCK_PREFIX = "LOAN_HISTORY:LOCK:USERBOOK:";
 	
-	public LoanHistoryServiceImpl(LoanHistoryRepository loanHistoryRepository, 
-			NotificationService notificatinoService, RedissonClient redissonClient) {
+	public LoanHistoryServiceImpl(LoanHistoryRepository loanHistoryRepository, NotificationService notificatinoService, 
+			EntityMapper entityMapper, RedissonClient redissonClient) {
 		this.loanHistoryRepository = loanHistoryRepository;
 		this.notificationService = notificatinoService;
+		this.entityMapper = entityMapper;
 		this.redissonClient = redissonClient;
 	}
 	
 	@Override
 	@Transactional
 	public void processAction(Long userBookId, Long ownerId, Long loanerId, LoanAction action, Integer expectedLoanDays, String comment) {
-		UserBook userBook = EntityMapper.getReference(UserBook.class, userBookId);
-		User owner = (ownerId != null) ? EntityMapper.getReference(User.class, ownerId) : null;
-		User loaner = EntityMapper.getReference(User.class, loanerId);
+		UserBook userBook = entityMapper.getReference(UserBook.class, userBookId);
+		User owner = (ownerId != null) ? entityMapper.getReference(User.class, ownerId) : null;
+		User loaner = entityMapper.getReference(User.class, loanerId);
 		
         switch (action) {
             case REQUEST_LOAN -> requestLoan(userBook, owner, loaner, expectedLoanDays, comment);
@@ -114,7 +116,7 @@ public class LoanHistoryServiceImpl implements LoanHistoryService {
 			List<LoanHistory> rejectedHistories = allRequests.values().stream()
 		            .<LoanHistory>map(aor -> LoanHistory.builder()
 		                    .userBook(userBook)
-		                    .loaner(EntityMapper.getReference(User.class, aor.getLoanerId()))
+		                    .loaner(entityMapper.getReference(User.class, aor.getLoanerId()))
 		                    .loanDays(aor.getExpectedLoanDays())
 		                    .loanStatus(LoanStatus.PREOCCUPIED)
 		                    .build())

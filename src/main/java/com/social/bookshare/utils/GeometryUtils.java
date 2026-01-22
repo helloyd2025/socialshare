@@ -8,21 +8,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class GeometryUtils {
 
-	private static GeometryFactory factory;
+	private final GeometryFactory factory;
 	
 	public GeometryUtils(GeometryFactory geometryFactory) {
-        GeometryUtils.factory = geometryFactory;
+        this.factory = geometryFactory;
     }
 	
-	public static Point createPoint(double lon, double lat) {
-        if (factory == null) {
-        	throw new IllegalStateException("GeometryFactory not initialized.");
-        }
+	public Point createPoint(double lon, double lat) {
         return factory.createPoint(new Coordinate(lon, lat));
     }
 	
 	/** Calculate Haversine distance between two locations */
-	public static double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+	public double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
 	    final int R = 6371; // kilometer
 
 	    double dLat = Math.toRadians(lat2 - lat1);

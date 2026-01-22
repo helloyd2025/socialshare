@@ -38,15 +38,17 @@ public class UserBookServiceImpl implements UserBookService {
 	private final UserBookRepository userBookRepository;
 	private final BookService bookService;
 	private final LocationService locationService;
+	private final EntityMapper entityMapper;
 	private final RedissonClient redissonClient;
 	
 	private static final String PENDING_REGISTRATION_PREFIX = "USER_BOOK:REGISTRATION:REQUEST:";
 
-	public UserBookServiceImpl(UserBookRepository userBookRepository, BookService bookService,
-			LocationService locationService, RedissonClient redissonClient) {
+	public UserBookServiceImpl(UserBookRepository userBookRepository, BookService bookService, LocationService locationService, 
+			EntityMapper entityMapper, RedissonClient redissonClient) {
 		this.userBookRepository = userBookRepository;
 		this.bookService = bookService;
 		this.locationService = locationService;
+		this.entityMapper = entityMapper;
 		this.redissonClient = redissonClient;
 	}
 
@@ -175,9 +177,9 @@ public class UserBookServiceImpl implements UserBookService {
 	@Transactional
 	public UserBook registerUserBook(Long userId, UserBookRegisterRequest request) {
 		UserBook ub = UserBook.builder()
-				.owner(EntityMapper.getReference(User.class, userId))
-				.location(EntityMapper.getReference(Location.class, request.getLocationId()))
-				.book(EntityMapper.getReference(Book.class, request.getBookId()))
+				.owner(entityMapper.getReference(User.class, userId))
+				.location(entityMapper.getReference(Location.class, request.getLocationId()))
+				.book(entityMapper.getReference(Book.class, request.getBookId()))
 				.comment(request.getComment())
 				.status(request.getStatus())
 				.build();
@@ -188,7 +190,7 @@ public class UserBookServiceImpl implements UserBookService {
 	@Override
 	@Transactional(readOnly = true)
 	public List<UserBookResponse> getUserBooks(Long userId) {
-		return userBookRepository.findByUser(EntityMapper.getReference(User.class, userId)).stream()
+		return userBookRepository.findByUser(entityMapper.getReference(User.class, userId)).stream()
 				.<UserBookResponse>map(ub -> UserBookResponse.builder()
 						.id(ub.getId())
 						.location(ub.getLocation())
@@ -221,7 +223,7 @@ public class UserBookServiceImpl implements UserBookService {
 		}
 		
 		userBook.updateUserBook(
-				EntityMapper.getReference(Location.class, request.getLocationId()), 
+				entityMapper.getReference(Location.class, request.getLocationId()), 
 				request.getComment(), 
 				Status.valueOf(request.getStatus().strip().toUpperCase())
 			);
